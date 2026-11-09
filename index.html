@@ -169,8 +169,8 @@ textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(
 <body>
 <div class="wrap">
   <header class="top">
-    <div><h1>Revue de plans</h1><p id="progress" class="mono"></p></div>
-    <button id="add-plans" class="btn ghost" type="button">Ajouter des plans</button>
+    <div><h1 data-i18n="title">Revue de plans</h1><p id="progress" class="mono"></p></div>
+    <div style="display:flex;gap:10px;align-items:center"><select id="lang" data-i18n-aria="langLabel" aria-label="Langue"><option value="fr">Français</option><option value="en">English</option></select><button id="add-plans" class="btn ghost" type="button" data-i18n="addPlans">Ajouter des plans</button></div>
     <input id="files" type="file" accept="image/*,application/pdf,.dxf,image/vnd.dxf,application/dxf" multiple hidden>
   </header>
   <p id="hint" class="hint">Trois plans d'exemple sont chargés. Ajoutez vos plans (PDF, DXF ou images) pour lancer votre propre revue. Glissez à droite pour valider, à gauche pour demander une reprise.</p>
@@ -178,31 +178,31 @@ textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(
   <main style="display:flex;flex-direction:column;gap:14px">
     <div id="deck" class="deck"></div>
     <div class="actions">
-      <button id="undo" class="round small" aria-label="Annuler la dernière décision" title="Annuler la dernière décision">↶</button>
-      <button id="no" class="round ko" aria-label="À reprendre" title="À reprendre">✕</button>
-      <button id="zoom" class="round small" aria-label="Agrandir le plan" title="Agrandir le plan">⤢</button>
-      <button id="yes" class="round ok" aria-label="Valider" title="Valider">✓</button>
+      <button id="undo" class="round small" data-i18n-aria="undo" aria-label="Annuler la dernière décision" title="Annuler la dernière décision">↶</button>
+      <button id="no" class="round ko" data-i18n-aria="rework" aria-label="À reprendre" title="À reprendre">✕</button>
+      <button id="zoom" class="round small" data-i18n-aria="enlarge" aria-label="Agrandir le plan" title="Agrandir le plan">⤢</button>
+      <button id="yes" class="round ok" data-i18n-aria="approve" aria-label="Valider" title="Valider">✓</button>
     </div>
-    <p class="keys mono">← à reprendre · → valider · espace agrandir</p>
+    <p class="keys mono" data-i18n="keys">← à reprendre · → valider · espace agrandir</p>
     <section id="controls" class="controls" hidden>
-      <div class="ref-row"><label for="ref">Référence du plan</label><input id="ref" type="text" autocomplete="off" spellcheck="false"></div>
+      <div class="ref-row"><label for="ref" data-i18n="refLabel">Référence du plan</label><input id="ref" type="text" autocomplete="off" spellcheck="false"></div>
       <details id="checks-box" open>
-        <summary><span>Contrôles</span><span id="checks-count" class="mono"></span></summary>
+        <summary><span data-i18n="checks">Contrôles</span><span id="checks-count" class="mono"></span></summary>
         <div id="checks" class="checks"></div>
         <div id="checks-edit" hidden>
-          <label for="checks-text" class="hint">Un contrôle par ligne. La liste sert pour tous les plans.</label>
+          <label for="checks-text" class="hint" data-i18n="checksHelp">Un contrôle par ligne. La liste sert pour tous les plans.</label>
           <textarea id="checks-text" rows="8"></textarea>
-          <div class="row"><button id="checks-cancel" class="btn ghost" type="button">Annuler</button><button id="checks-save" class="btn" type="button">Enregistrer la liste</button></div>
+          <div class="row"><button id="checks-cancel" class="btn ghost" type="button" data-i18n="cancel">Annuler</button><button id="checks-save" class="btn" type="button" data-i18n="saveList">Enregistrer la liste</button></div>
         </div>
-        <button id="checks-modify" class="link accent" type="button">Modifier la liste</button>
+        <button id="checks-modify" class="link accent" type="button" data-i18n="editList">Modifier la liste</button>
       </details>
     </section>
   </main>
 
   <section id="recap" hidden>
-    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="md" class="btn ghost">Exporter en .md</button><button id="pdf" class="btn ghost">Exporter en PDF</button><button id="zip" class="btn">Exporter pour l’IA (.zip)</button></div></div>
+    <div class="recap-head"><h2 data-i18n="recap">Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost" data-i18n="newReview">Nouvelle revue</button><button id="copy" class="btn ghost" data-i18n="copy">Copier le récap</button><button id="md" class="btn ghost" data-i18n="exportMd">Exporter en .md</button><button id="pdf" class="btn ghost" data-i18n="exportPdf">Exporter en PDF</button><button id="zip" class="btn" data-i18n="exportZip">Exporter pour l’IA (.zip)</button></div></div>
     <div id="recap-grid" class="grid"></div>
-    <label for="recap-text" class="hint">Texte à transmettre au bureau d'études :</label>
+    <label for="recap-text" class="hint" data-i18n="recapLabel">Texte à transmettre au bureau d'études :</label>
     <textarea id="recap-text" readonly rows="10"></textarea>
   </section>
 </div>
@@ -212,30 +212,30 @@ textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(
     <div class="panel-head"><h2 id="sheet-title">À reprendre</h2><span id="sheet-name" class="mono"></span></div>
     <div class="review-body">
       <div class="board-col">
-        <div class="toolbar" role="group" aria-label="Outil d'annotation">
-          <button type="button" class="tool" data-tool="pin"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg>Repère</button>
-          <button type="button" class="tool" data-tool="rect"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Zone</button>
-          <button type="button" class="tool" data-tool="arrow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13L12 4M6.5 4H12v5.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Flèche</button>
-          <button type="button" class="tool" data-tool="draw"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 11c2-6 4 1 6-3s4 1 6-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Main levée</button>
-          <span class="zoombar"><button type="button" class="tool small" id="zoom-out" aria-label="Dézoomer">−</button><span id="zoom-level" class="mono">100 %</span><button type="button" class="tool small" id="zoom-in" aria-label="Zoomer">+</button></span>
+        <div class="toolbar" role="group" data-i18n-aria="toolGroup" aria-label="Outil d'annotation">
+          <button type="button" class="tool" data-tool="pin"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg><span>Repère</span></button>
+          <button type="button" class="tool" data-tool="rect"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Zone</span></button>
+          <button type="button" class="tool" data-tool="arrow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13L12 4M6.5 4H12v5.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Flèche</span></button>
+          <button type="button" class="tool" data-tool="draw"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 11c2-6 4 1 6-3s4 1 6-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Main levée</span></button>
+          <span class="zoombar"><button type="button" class="tool small" id="zoom-out" data-i18n-aria="zoomOut" aria-label="Dézoomer">−</button><span id="zoom-level" class="mono">100 %</span><button type="button" class="tool small" id="zoom-in" data-i18n-aria="zoomIn" aria-label="Zoomer">+</button></span>
         </div>
         <p id="tool-hint" class="hint"></p>
         <div class="board-scroll" id="board-scroll"><div class="pinboard" id="pinboard"><img id="pin-img" alt="" draggable="false"></div></div>
       </div>
       <div class="board-col">
         <ol id="marks" class="marks"></ol>
-        <p class="hint" style="font-size:13px">Astuce : sur ordinateur, collez une capture d'écran (Ctrl+V ou ⌘V) pour l'ajouter à la remarque sélectionnée.</p>
+        <p class="hint" style="font-size:13px" data-i18n="pasteTip">Astuce : sur ordinateur, collez une capture d'écran (Ctrl+V ou ⌘V) pour l'ajouter à la remarque sélectionnée.</p>
       </div>
     </div>
     <div class="panel-foot">
-      <button id="cancel-ko" class="btn ghost">Annuler</button>
+      <button id="cancel-ko" class="btn ghost" data-i18n="cancel">Annuler</button>
       <button id="send-ko" class="btn danger" disabled>Envoyer les remarques</button>
     </div>
   </div>
 </div>
 
-<div id="viewer" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Image agrandie">
-  <div class="viewer-bar"><span id="viewer-name" class="mono"></span><button id="viewer-close" class="btn">Fermer</button></div>
+<div id="viewer" class="overlay" hidden role="dialog" aria-modal="true" data-i18n-aria="enlargedImage" aria-label="Image agrandie">
+  <div class="viewer-bar"><span id="viewer-name" class="mono"></span><button id="viewer-close" class="btn" data-i18n="close">Fermer</button></div>
   <div class="viewer-scroll"><img id="viewer-img" alt=""></div>
 </div>
 
@@ -246,10 +246,145 @@ const DEFAULT_CHECKS = ['Cartouche complet', 'Indice et date', 'Échelle', 'Cota
 let CHECKS = [...DEFAULT_CHECKS];
 
 const CATS = ['Cote', 'Tolérance', 'Matière', 'État de surface', 'Usinage', 'Soudure', 'Cartouche', 'Autre'];
-const SEV = { b: 'Bloquant', m: 'Mineur' };
-const TOOLS = { pin: 'Repère', rect: 'Zone', arrow: 'Flèche', draw: 'Main levée' };
-const TOOL_HINT = { pin: 'Touchez le plan pour poser un repère.', rect: 'Glissez sur le plan pour encadrer une zone.',
-  arrow: "Glissez depuis un endroit libre jusqu'à l'élément visé.", draw: 'Dessinez sur le plan au doigt ou à la souris.' };
+
+/* ---------- languages: categories and checks are stored in French (their id) and translated for display ---------- */
+const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+const I18N = {
+  fr: {
+    title: 'Revue de plans', addPlans: 'Ajouter des plans', langLabel: 'Langue',
+    hintSample: "Trois plans d'exemple sont chargés. Ajoutez vos plans (PDF, DXF ou images) pour lancer votre propre revue. Glissez à droite pour valider, à gauche pour demander une reprise.",
+    undo: 'Annuler la dernière décision', rework: 'À reprendre', enlarge: 'Agrandir le plan', approve: 'Valider', approved: 'Validé',
+    keys: '← à reprendre · → valider · espace agrandir', refLabel: 'Référence du plan', checks: 'Contrôles',
+    checksHelp: 'Un contrôle par ligne. La liste sert pour tous les plans.', cancel: 'Annuler', saveList: 'Enregistrer la liste', editList: 'Modifier la liste',
+    recap: 'Récapitulatif', newReview: 'Nouvelle revue', copy: 'Copier le récap', exportMd: 'Exporter en .md', exportPdf: 'Exporter en PDF', exportZip: 'Exporter pour l’IA (.zip)',
+    recapLabel: "Texte à transmettre au bureau d'études :", toolGroup: "Outil d'annotation", zoomOut: 'Dézoomer', zoomIn: 'Zoomer',
+    pasteTip: "Astuce : sur ordinateur, collez une capture d'écran (Ctrl+V ou ⌘V) pour l'ajouter à la remarque sélectionnée.",
+    enlargedImage: 'Image agrandie', close: 'Fermer',
+    tools: { pin: 'Repère', rect: 'Zone', arrow: 'Flèche', draw: 'Main levée' },
+    toolHint: { pin: 'Touchez le plan pour poser un repère.', rect: 'Glissez sur le plan pour encadrer une zone.',
+      arrow: "Glissez depuis un endroit libre jusqu'à l'élément visé.", draw: 'Dessinez sur le plan au doigt ou à la souris.' },
+    toolHintZoom: ' Pour déplacer le plan zoomé, repassez sur Repère.',
+    sev: { b: 'Bloquant', m: 'Mineur' }, general: 'Général',
+    unreadableImage: 'image illisible', nothingToDraw: 'aucun élément dessinable dans le DXF', loadFailed: src => `chargement de ${src} impossible`,
+    unsupported: 'format non pris en charge (PDF, DXF ou image uniquement)', readFailed: 'lecture impossible', notLoaded: 'Non chargés : ', loading: 'Chargement des plans…',
+    progressDone: n => `${n} / ${n} plans revus`, progress: (i, n) => `Plan ${i} / ${n}`, noPlan: 'Aucun plan', noPlanHelp: 'Ajoutez des PDF ou des images.',
+    reviewDone: 'Revue terminée', doneSummary: (ok, ko) => `${plural(ok, 'validé')}, ${ko} à reprendre.`, planAlt: n => 'Plan ' + n,
+    editRemarks: 'Modifier les remarques', addRemarks: 'Ajouter des remarques', send: 'Envoyer les remarques', saveRemarks: 'Enregistrer', approveNoRemark: 'Valider le plan (aucune remarque)',
+    enlargeImage: 'Agrandir l’image', removeImage: 'Retirer l’image', attachedImage: 'Image jointe',
+    category: 'Catégorie', severity: 'Gravité', del: 'Supprimer', generalRemark: 'Remarque générale', comment: 'Commentaire',
+    phMark: 'Ex. : cote 205 à corriger en 210', phNote: 'Ex. : passer l’épaisseur à 8 mm sur toute la pièce',
+    phExpected: 'Correction attendue (facultatif). Ex. : H8, ép. 8 mm', expected: 'Correction attendue', expectedGeneral: ', remarque générale', addImage: '+ Image',
+    noComment: '(sans commentaire)', imagesAttached: n => ` (${plural(n, 'image')} ${n > 1 ? 'jointes' : 'jointe'})`, expectedInline: e => ` ; correction attendue : ${e}`,
+    checksLine: (done, total, miss) => `Contrôles : ${done}/${total}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : ''),
+    reviewOf: d => `Revue de plans du ${d}`, approvedN: n => `Validés (${n})`, reworkN: n => `À reprendre (${n})`,
+    koCounts: (b, m) => `${plural(b, 'point')} ${b > 1 ? 'bloquants' : 'bloquant'}, ${m} ${m > 1 ? 'mineurs' : 'mineur'}`, blockingN: n => plural(n, 'bloquant'),
+    copied: 'Copié', selectedCopy: 'Sélectionné, faites Ctrl+C', summary: (n, ok, ko) => `${plural(n, 'plan')} · ${plural(ok, 'validé')} · ${ko} à reprendre`,
+    APPROVED: 'VALIDÉ', REWORK: 'À REPRENDRE', expectedLine: 'Correction attendue : ', imagesAppendix: n => `${plural(n, 'image')} en annexe`,
+    remarkN: n => n ? 'remarque ' + n : 'remarque générale', attachedImages: name => `${name} : images jointes`,
+    tapToShare: 'Toucher pour partager (fichier prêt)', downloaded: 'Fichier téléchargé', preparingPdf: 'Préparation du PDF…', preparingZip: 'Préparation du .zip…',
+    exportFailed: e => `Échec de l’export (${e}), réessayer`, fileStem: 'revue-plans', none: 'Aucun.',
+    mdHead: '| # | Type | Gravité | Catégorie | Position | Commentaire | Correction attendue | Images |',
+    mdFoot: '_Positions en % de la largeur et de la hauteur du plan, depuis le coin haut gauche. Les images jointes sont dans l’export PDF._',
+    coords: 'Origine au coin haut gauche de la page. zone/point : fraction de la largeur et de la hauteur de la page (0 à 1). zone_mm/point_mm : millimètres sur la feuille (null si le plan ne vient pas d’un PDF). zone_dxf/point_dxf : coordonnées dans le repère du dessin DXF, Y vers le haut, unités de plan.dxf.unites (null si le plan ne vient pas d’un DXF). Pour une flèche, le point est la pointe.',
+    toolWord: { repere: 'repère', zone: 'zone', fleche: 'flèche', main_levee: 'dessin à main levée' },
+    where: { pt: (w, p) => `${w} visant le point ${p}`, zone: (w, z) => `${w} couvrant ${z}`, dxf: u => ` (repère du DXF${u ? `, en ${u}` : ''})`, page: ' de la page', to: ' à ' },
+    grav: { bloquant: 'bloquant', mineur: 'mineur' },
+    prompt: ['# Corrections à apporter à des plans de fabrication', '',
+      'Tu as produit les plans de fabrication ci-dessous (en PDF). Un relecteur humain les a contrôlés. Corrige ceux qui sont « à reprendre » en suivant ses remarques, puis régénère les PDF corrigés.', '',
+      '## Règles', '',
+      '1. Traite toutes les remarques **bloquantes**. Traite les **mineures** si cela ne crée pas d’autre problème.',
+      '2. Quand une « correction attendue » est indiquée, applique-la exactement.',
+      '3. Ne modifie rien d’autre que ce qui est demandé. Garde la référence de chaque plan ; si le cartouche porte un indice de révision, incrémente-le.',
+      '4. Si une remarque est ambiguë ou impossible à appliquer, ne devine pas : signale-la.',
+      '5. Les contrôles « non vérifiés » n’ont pas été faits par le relecteur : vérifie-les aussi.', '',
+      '## Localiser une remarque', '',
+      '- Les positions partent du **coin haut gauche** de la page, en millimètres sur la feuille quand c’est connu, sinon en % de la largeur et de la hauteur de la page.',
+      '- Pour un plan **DXF**, les positions sont données dans le repère du dessin (mêmes coordonnées que dans le fichier, Y vers le haut) : retrouve les entités concernées à ces coordonnées.',
+      '- Pour une flèche, le point indiqué est l’endroit **visé** (la pointe).',
+      '- Si tu as accès aux fichiers joints : `plans/<ref>.png` montre le plan annoté avec ses repères numérotés, `zones/<id>.png` un zoom sur l’endroit de chaque remarque, `images/` les photos et captures du relecteur. Sans les images, les positions suffisent.',
+      '- Les mêmes données, structurées, sont dans `revue.json`.', '',
+      '## Format de ta réponse', '',
+      'Termine par un tableau avec une ligne par remarque :', '',
+      '| id | statut | ce qui a été fait, ou pourquoi ce n’est pas fait |', '|---|---|---|'],
+    promptExample: ex => [`| ${ex} | corrigé | … |`, '', 'Statuts possibles : `corrigé`, `non corrigé`, `à clarifier`.', ''],
+    pToRework: n => `## Plans à reprendre (${n})`, pFile: f => `- Fichier : ${f}`, pSheet: (w, h) => ` · feuille de ${w} × ${h} mm`,
+    pCounts: (nb, nm, img) => `- ${nb} remarque${nb > 1 ? 's' : ''} bloquante${nb > 1 ? 's' : ''}, ${nm} mineure${nm > 1 ? 's' : ''} · plan annoté : \`${img}\``,
+    pUnchecked: l => `- Contrôles non vérifiés : ${l}`, pWhere: w => `- Où : ${w}`, pWhereGeneral: 'remarque générale, sur tout le plan',
+    pFinding: c => `- Constat : ${c || '(pas de commentaire : voir l’image de la zone)'}`, pExpected: e => `- Correction attendue : ${e}`, pImages: l => `- Images : ${l}`,
+    pApproved: n => `## Plans validés, à ne pas modifier (${n})`,
+  },
+  en: {
+    title: 'Drawing review', addPlans: 'Add drawings', langLabel: 'Language',
+    hintSample: 'Three sample drawings are loaded. Add your drawings (PDF, DXF or images) to start your own review. Swipe right to approve, left to request rework.',
+    undo: 'Undo last decision', rework: 'Needs rework', enlarge: 'Enlarge drawing', approve: 'Approve', approved: 'Approved',
+    keys: '← rework · → approve · space enlarge', refLabel: 'Drawing reference', checks: 'Checks',
+    checksHelp: 'One check per line. The list applies to all drawings.', cancel: 'Cancel', saveList: 'Save list', editList: 'Edit list',
+    recap: 'Summary', newReview: 'New review', copy: 'Copy summary', exportMd: 'Export as .md', exportPdf: 'Export as PDF', exportZip: 'Export for AI (.zip)',
+    recapLabel: 'Text to send to the design office:', toolGroup: 'Annotation tool', zoomOut: 'Zoom out', zoomIn: 'Zoom in',
+    pasteTip: 'Tip: on a computer, paste a screenshot (Ctrl+V or ⌘V) to add it to the selected remark.',
+    enlargedImage: 'Enlarged image', close: 'Close',
+    tools: { pin: 'Pin', rect: 'Area', arrow: 'Arrow', draw: 'Freehand' },
+    toolHint: { pin: 'Tap the drawing to place a pin.', rect: 'Drag on the drawing to frame an area.',
+      arrow: 'Drag from a clear spot to the element you mean.', draw: 'Sketch on the drawing with your finger or mouse.' },
+    toolHintZoom: ' To pan the zoomed drawing, switch back to Pin.',
+    sev: { b: 'Blocking', m: 'Minor' }, general: 'General',
+    unreadableImage: 'unreadable image', nothingToDraw: 'nothing drawable in the DXF', loadFailed: src => `could not load ${src}`,
+    unsupported: 'unsupported format (PDF, DXF or images only)', readFailed: 'could not read file', notLoaded: 'Not loaded: ', loading: 'Loading drawings…',
+    progressDone: n => `${n} / ${n} drawings reviewed`, progress: (i, n) => `Drawing ${i} / ${n}`, noPlan: 'No drawings', noPlanHelp: 'Add PDFs or images.',
+    reviewDone: 'Review complete', doneSummary: (ok, ko) => `${ok} approved, ${ko} to rework.`, planAlt: n => 'Drawing ' + n,
+    editRemarks: 'Edit remarks', addRemarks: 'Add remarks', send: 'Send remarks', saveRemarks: 'Save', approveNoRemark: 'Approve drawing (no remarks)',
+    enlargeImage: 'Enlarge image', removeImage: 'Remove image', attachedImage: 'Attached image',
+    category: 'Category', severity: 'Severity', del: 'Delete', generalRemark: 'General remark', comment: 'Comment',
+    phMark: 'E.g. dimension 205 should be 210', phNote: 'E.g. change thickness to 8 mm on the whole part',
+    phExpected: 'Expected correction (optional). E.g. H8, 8 mm thick', expected: 'Expected correction', expectedGeneral: ', general remark', addImage: '+ Image',
+    noComment: '(no comment)', imagesAttached: n => ` (${plural(n, 'image')} attached)`, expectedInline: e => `; expected correction: ${e}`,
+    checksLine: (done, total, miss) => `Checks: ${done}/${total}` + (miss.length ? ` (not verified: ${miss.join(', ')})` : ''),
+    reviewOf: d => `Drawing review of ${d}`, approvedN: n => `Approved (${n})`, reworkN: n => `Needs rework (${n})`,
+    koCounts: (b, m) => `${plural(b, 'blocking issue')}, ${m} minor`, blockingN: n => `${n} blocking`,
+    copied: 'Copied', selectedCopy: 'Selected, press Ctrl+C', summary: (n, ok, ko) => `${plural(n, 'drawing')} · ${ok} approved · ${ko} to rework`,
+    APPROVED: 'APPROVED', REWORK: 'NEEDS REWORK', expectedLine: 'Expected correction: ', imagesAppendix: n => `${plural(n, 'image')} in appendix`,
+    remarkN: n => n ? 'remark ' + n : 'general remark', attachedImages: name => `${name}: attached images`,
+    tapToShare: 'Tap to share (file ready)', downloaded: 'File downloaded', preparingPdf: 'Preparing PDF…', preparingZip: 'Preparing .zip…',
+    exportFailed: e => `Export failed (${e}), try again`, fileStem: 'drawing-review', none: 'None.',
+    mdHead: '| # | Type | Severity | Category | Position | Comment | Expected correction | Images |',
+    mdFoot: '_Positions in % of the drawing width and height, from the top-left corner. Attached images are in the PDF export._',
+    coords: 'Origin at the top-left corner of the page. zone/point: fraction of the page width and height (0 to 1). zone_mm/point_mm: millimetres on the sheet (null if the drawing is not from a PDF). zone_dxf/point_dxf: coordinates in the DXF drawing system, Y up, in plan.dxf.unites units (null if the drawing is not from a DXF). For an arrow, the point is the arrowhead.',
+    toolWord: { repere: 'pin', zone: 'area', fleche: 'arrow', main_levee: 'freehand sketch' },
+    where: { pt: (w, p) => `${w} pointing at ${p}`, zone: (w, z) => `${w} covering ${z}`, dxf: u => ` (DXF coordinates${u ? `, in ${u}` : ''})`, page: ' of the page', to: ' to ' },
+    grav: { bloquant: 'blocking', mineur: 'minor' },
+    prompt: ['# Corrections to make to manufacturing drawings', '',
+      'You produced the manufacturing drawings below (as PDF). A human reviewer has checked them. Fix the ones that “need rework” following the reviewer’s remarks, then regenerate the corrected PDFs.', '',
+      '## Rules', '',
+      '1. Address every **blocking** remark. Address **minor** ones if that creates no other problem.',
+      '2. When an “expected correction” is given, apply it exactly.',
+      '3. Change nothing beyond what is asked. Keep each drawing’s reference; if the title block has a revision index, increment it.',
+      '4. If a remark is ambiguous or impossible to apply, do not guess: flag it.',
+      '5. Checks marked “not verified” were not done by the reviewer: verify them too.', '',
+      '## Locating a remark', '',
+      '- Positions are measured from the **top-left corner** of the page, in millimetres on the sheet when known, otherwise in % of the page width and height.',
+      '- For a **DXF** drawing, positions are given in the drawing’s coordinate system (same coordinates as in the file, Y up): find the entities concerned at those coordinates.',
+      '- For an arrow, the given point is the **target** (the arrowhead).',
+      '- If you can access the attached files: `plans/<ref>.png` shows the annotated drawing with its numbered markers, `zones/<id>.png` a close-up of each remark’s location, `images/` the reviewer’s photos and screenshots. Without the images, the positions are enough.',
+      '- The same data, structured, is in `revue.json`.', '',
+      '## Format of your answer', '',
+      'End with a table with one row per remark:', '',
+      '| id | status | what was done, or why it was not done |', '|---|---|---|'],
+    promptExample: ex => [`| ${ex} | fixed | … |`, '', 'Possible statuses: `fixed`, `not fixed`, `needs clarification`.', ''],
+    pToRework: n => `## Drawings to rework (${n})`, pFile: f => `- File: ${f}`, pSheet: (w, h) => ` · ${w} × ${h} mm sheet`,
+    pCounts: (nb, nm, img) => `- ${nb} blocking remark${nb > 1 ? 's' : ''}, ${nm} minor · annotated drawing: \`${img}\``,
+    pUnchecked: l => `- Unverified checks: ${l}`, pWhere: w => `- Where: ${w}`, pWhereGeneral: 'general remark, on the whole drawing',
+    pFinding: c => `- Finding: ${c || '(no comment: see the zone image)'}`, pExpected: e => `- Expected correction: ${e}`, pImages: l => `- Images: ${l}`,
+    pApproved: n => `## Approved drawings, do not modify (${n})`,
+  },
+};
+const TERMS_EN = { 'Cote': 'Dimension', 'Tolérance': 'Tolerance', 'Matière': 'Material', 'État de surface': 'Surface finish', 'Usinage': 'Machining',
+  'Soudure': 'Welding', 'Cartouche': 'Title block', 'Autre': 'Other', 'Cartouche complet': 'Title block complete', 'Indice et date': 'Revision and date',
+  'Échelle': 'Scale', 'Cotation complète': 'Full dimensioning', 'Tolérances': 'Tolerances', 'Traitement / finition': 'Treatment / finish' };
+let lang = (() => { try { const l = localStorage.getItem('lang'); if (I18N[l]) return l; } catch {} return /^fr/i.test(navigator.language || '') ? 'fr' : 'en'; })();
+const t = (k, ...a) => { const v = I18N[lang][k]; return typeof v === 'function' ? v(...a) : v; };
+const term = s => lang === 'en' ? TERMS_EN[s] || s : s;
+const untr = s => lang === 'en' ? Object.keys(TERMS_EN).find(k => TERMS_EN[k] === s) || s : s;
+const today = () => new Date().toLocaleDateString(lang);
 const COLOR = { b: '#d1352b', m: '#d98a00' }; // drawn on white paper, so fixed in both themes
 
 /* ---------- sample drawings (A3-ish sheets drawn as SVG) ---------- */
@@ -259,19 +394,20 @@ const vdim = (x,y1,y2,t) => { const m=(y1+y2)/2; return `<g stroke="${B}" stroke
 const part = s => `<g fill="none" stroke="#111" stroke-width="3">${s}</g>`;
 const axis = (x1,y1,x2,y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#111" stroke-width="1" stroke-dasharray="24 6 4 6"/>`;
 function sheet(title, ref, mat, body){
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1188" height="840" viewBox="0 0 1188 840" font-family="Arial, Helvetica, sans-serif"><rect width="1188" height="840" fill="#fff"/><rect x="20" y="20" width="1148" height="800" fill="none" stroke="#111" stroke-width="2"/>${body}<g stroke="#111" stroke-width="1.5" fill="none"><rect x="768" y="700" width="400" height="120"/><line x1="768" y1="742" x2="1168" y2="742"/><line x1="768" y1="781" x2="1168" y2="781"/><line x1="1000" y1="742" x2="1000" y2="820"/></g><g fill="#111" font-size="18"><text x="780" y="730" font-size="24" font-weight="bold">${title}</text><text x="780" y="768">Réf. ${ref}</text><text x="1012" y="768">Indice A</text><text x="780" y="807">Échelle 1:2</text><text x="1012" y="807">${mat}</text></g></svg>`);
+  const en = lang === 'en';
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1188" height="840" viewBox="0 0 1188 840" font-family="Arial, Helvetica, sans-serif"><rect width="1188" height="840" fill="#fff"/><rect x="20" y="20" width="1148" height="800" fill="none" stroke="#111" stroke-width="2"/>${body}<g stroke="#111" stroke-width="1.5" fill="none"><rect x="768" y="700" width="400" height="120"/><line x1="768" y1="742" x2="1168" y2="742"/><line x1="768" y1="781" x2="1168" y2="781"/><line x1="1000" y1="742" x2="1000" y2="820"/></g><g fill="#111" font-size="18"><text x="780" y="730" font-size="24" font-weight="bold">${title}</text><text x="780" y="768">${en ? 'Ref.' : 'Réf.'} ${ref}</text><text x="1012" y="768">${en ? 'Rev. A' : 'Indice A'}</text><text x="780" y="807">${en ? 'Scale' : 'Échelle'} 1:2</text><text x="1012" y="807">${mat}</text></g></svg>`);
 }
-const SAMPLES = [
-  { name: 'Platine support moteur (exemple)', src: sheet('PLATINE SUPPORT MOTEUR','PL-2041','S235 ép. 6',
+const samples = (en = lang === 'en') => [
+  { name: en ? 'Motor mounting plate (sample)' : 'Platine support moteur (exemple)', src: sheet(en ? 'MOTOR MOUNTING PLATE' : 'PLATINE SUPPORT MOTEUR','PL-2041',en ? 'S235 6 thk' : 'S235 ép. 6',
       part('<rect x="200" y="220" width="500" height="300"/><circle cx="245" cy="265" r="16"/><circle cx="655" cy="265" r="16"/><circle cx="245" cy="475" r="16"/><circle cx="655" cy="475" r="16"/><circle cx="450" cy="370" r="62"/>')
       + axis(450,290,450,450) + axis(370,370,530,370)
       + hdim(200,700,180,'250') + vdim(160,220,520,'150') + hdim(245,655,570,'205')
       + '<text x="680" y="250" font-size="22" fill="#111">4× Ø9</text><text x="520" y="320" font-size="22" fill="#111">Ø62 H7</text>') },
-  { name: 'Équerre de fixation (exemple)', src: sheet('ÉQUERRE DE FIXATION','EQ-0317','S355 ép. 8',
+  { name: en ? 'Mounting bracket (sample)' : 'Équerre de fixation (exemple)', src: sheet(en ? 'MOUNTING BRACKET' : 'ÉQUERRE DE FIXATION','EQ-0317',en ? 'S355 8 thk' : 'S355 ép. 8',
       part('<path d="M250 180 V560 H700 V500 H310 V180 Z"/><circle cx="280" cy="260" r="12"/><circle cx="280" cy="400" r="12"/><circle cx="430" cy="530" r="12"/><circle cx="600" cy="530" r="12"/>')
       + hdim(250,700,615,'225') + vdim(205,180,560,'190') + hdim(250,310,140,'30')
-      + '<text x="330" y="470" font-size="22" fill="#111">R4 intérieur</text><text x="470" y="485" font-size="22" fill="#111">4× Ø7</text>') },
-  { name: 'Entretoise Ø40 (exemple)', src: sheet('ENTRETOISE Ø40','EN-1102','Alu 6060',
+      + `<text x="330" y="470" font-size="22" fill="#111">${en ? 'R4 inside' : 'R4 intérieur'}</text><text x="470" y="485" font-size="22" fill="#111">4× Ø7</text>`) },
+  { name: en ? 'Spacer Ø40 (sample)' : 'Entretoise Ø40 (exemple)', src: sheet(en ? 'SPACER Ø40' : 'ENTRETOISE Ø40','EN-1102','Alu 6060',
       part('<circle cx="360" cy="380" r="150"/><circle cx="360" cy="380" r="60"/><rect x="640" y="230" width="140" height="300"/><line x1="640" y1="320" x2="780" y2="320" stroke-dasharray="10 6" stroke-width="2"/><line x1="640" y1="440" x2="780" y2="440" stroke-dasharray="10 6" stroke-width="2"/>')
       + axis(180,380,540,380) + axis(360,200,360,560) + axis(620,380,800,380)
       + vdim(170,230,530,'Ø40') + hdim(640,780,195,'18') + vdim(830,320,440,'Ø16')
@@ -289,14 +425,13 @@ const migrate = it => it.marks ? it : { ...it, note: undefined, pins: undefined,
   ...(it.note ? [{ ...newMark('note', {}), text: it.note }] : []),
   ...(it.pins || []).map(p => ({ ...newMark('pin', { x: p.x, y: p.y }), text: p.text })) ] };
 const anchor = m => m.type === 'arrow' ? [m.x1, m.y1] : m.type === 'draw' ? m.pts[0] : [m.x, m.y];
-const pct = v => Math.round(v * 100) + ' %';
+const pct = v => Math.round(v * 100) + (lang === 'fr' ? ' %' : '%');
 // the point a remark is about: an arrow points at its head, the label sits at its tail
 const target = m => m.type === 'arrow' ? [m.x2, m.y2] : anchor(m);
 const defaultRef = it => it.name.replace(/\.pdf · p\.(\d+)$/i, '_p$1').replace(/\.(pdf|dxf|png|jpe?g|webp|gif|heic)$/i, '');
 const refOf = it => it.ref || defaultRef(it);
-const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
-const markMeta = m => [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
-const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image illisible')); i.src = src; });
+const markMeta = m => [m.type === 'note' ? t('general') : t('tools')[m.type], t('sev')[m.sev], term(m.cat)].filter(Boolean).join(' · ');
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(t('unreadableImage'))); i.src = src; });
 
 /* ---------- saved in this browser (IndexedDB: plans and photos can weigh several MB) ---------- */
 const dbp = new Promise((res, rej) => { const r = indexedDB.open('revue-plans', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
@@ -365,7 +500,7 @@ async function dxfPage(file){
   lines.forEach(l => l.vertices.forEach(v => grow(v[0], v[1])));
   texts.forEach(t => grow(t.x, t.y));
   solids.forEach(q => q.forEach(c => grow(c.x, c.y)));
-  if (!isFinite(x0)) throw new Error('aucun élément dessinable dans le DXF');
+  if (!isFinite(x0)) throw new Error(t('nothingToDraw'));
   const m = Math.max(x1 - x0, y1 - y0, 1) * .03;
   x0 -= m; y0 -= m; x1 += m; y1 += m;
   const k = 2400 / Math.max(x1 - x0, y1 - y0);
@@ -394,7 +529,7 @@ async function dxfPage(file){
 }
 
 let pdfReady = null;
-const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('chargement de ' + src + ' impossible')); document.head.appendChild(s); });
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(t('loadFailed', src))); document.head.appendChild(s); });
 function pdfjs(){
   return pdfReady ||= loadScript('vendor/pdfjs/pdf.min.js').then(() => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js'; return pdfjsLib; });
 }
@@ -425,10 +560,10 @@ async function readFiles(files, msg){
       if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) (await pdfPages(f)).forEach(p => added.push(mk(p)));
       else if (/\.dxf$/i.test(f.name)) added.push(mk(await dxfPage(f)));
       else if (f.type.startsWith('image/')) added.push(mk({ name: f.name, blob: f }));
-      else errors.push(`${f.name} : format non pris en charge (PDF, DXF ou image uniquement)`);
-    } catch (err){ errors.push(`${f.name} : ${err.message || 'lecture impossible'}`); }
+      else errors.push(`${f.name} : ${t('unsupported')}`);
+    } catch (err){ errors.push(`${f.name} : ${err.message || t('readFailed')}`); }
   }
-  if (errors.length){ hint.className = 'hint err'; hint.textContent = 'Non chargés : ' + errors.join(' ; '); }
+  if (errors.length){ hint.className = 'hint err'; hint.textContent = t('notLoaded') + errors.join(' ; '); }
   else hint.hidden = true;
   return added;
 }
@@ -436,7 +571,7 @@ $('files').addEventListener('change', async e => {
   const files = [...e.target.files]; e.target.value = '';
   if (!files.length) return;
   if (sample){ items = []; cur = 0; past = []; sample = false; }
-  items.push(...await readFiles(files, 'Chargement des plans…'));
+  items.push(...await readFiles(files, t('loading')));
   render();
 });
 /* ---------- drawing marks over a plan ---------- */
@@ -485,7 +620,7 @@ function drawOverlay(board, marks, onLabel){
       el.className = 'pin' + (m.type === 'pin' ? '' : ' tag'); el.textContent = ++n;
       el.style.left = x * 100 + '%'; el.style.top = y * 100 + '%'; el.style.background = COLOR[m.sev];
       if (onLabel){
-        el.type = 'button'; el.setAttribute('aria-label', `${TOOLS[m.type]} ${n}`);
+        el.type = 'button'; el.setAttribute('aria-label', `${t('tools')[m.type]} ${n}`);
         el.addEventListener('pointerdown', e => e.stopPropagation());
         el.addEventListener('click', e => { e.stopPropagation(); onLabel(i); });
       }
@@ -499,27 +634,27 @@ function drawOverlay(board, marks, onLabel){
 function render(){
   const deck = $('deck'); deck.innerHTML = '';
   const n = items.length, done = cur >= n;
-  $('progress').textContent = n ? (done ? `${n} / ${n} plans revus` : `Plan ${cur + 1} / ${n}`) : 'Aucun plan';
+  $('progress').textContent = n ? (done ? t('progressDone', n) : t('progress', cur + 1, n)) : t('noPlan');
   ['no', 'yes', 'zoom'].forEach(id => $(id).disabled = done);
   $('undo').disabled = !past.length;
   if (done){
     const ok = items.filter(i => i.decision === 'ok').length;
-    deck.innerHTML = n ? `<div class="done"><div><h2>Revue terminée</h2><p>${plural(ok, 'validé')}, ${n - ok} à reprendre.</p></div></div>`
-                       : `<div class="done"><div><h2>Aucun plan</h2><p>Ajoutez des PDF ou des images.</p></div></div>`;
+    deck.innerHTML = n ? `<div class="done"><div><h2>${t('reviewDone')}</h2><p>${t('doneSummary', ok, n - ok)}</p></div></div>`
+                       : `<div class="done"><div><h2>${t('noPlan')}</h2><p>${t('noPlanHelp')}</p></div></div>`;
   } else {
     if (items[cur + 1]) deck.appendChild(cardEl(cur + 1, false));
     deck.appendChild(cardEl(cur, true));
   }
   renderControls(done ? null : items[cur]);
-  pdfFile = null; zipFile = null; $('pdf').textContent = 'Exporter en PDF'; $('md').textContent = 'Exporter en .md'; $('zip').textContent = 'Exporter pour l’IA (.zip)';
+  pdfFile = null; zipFile = null; $('pdf').textContent = t('exportPdf'); $('md').textContent = t('exportMd'); $('zip').textContent = t('exportZip');
   renderRecap(done && n > 0);
   save();
 }
 function cardEl(i, top){
   const it = items[i], c = document.createElement('article');
   c.className = 'card ' + (top ? 'top' : 'under');
-  c.innerHTML = `<div class="paper"><img draggable="false"></div><footer class="cartouche"><span class="mono idx">${i + 1}/${items.length}</span><span class="name"></span></footer><span class="stamp stamp-ok">Validé</span><span class="stamp stamp-ko">À reprendre</span>`;
-  const img = c.querySelector('img'); img.src = srcOf(it); img.alt = 'Plan ' + it.name;
+  c.innerHTML = `<div class="paper"><img draggable="false"></div><footer class="cartouche"><span class="mono idx">${i + 1}/${items.length}</span><span class="name"></span></footer><span class="stamp stamp-ok">${t('approved')}</span><span class="stamp stamp-ko">${t('rework')}</span>`;
+  const img = c.querySelector('img'); img.src = srcOf(it); img.alt = t('planAlt', it.name);
   c.querySelector('.name').textContent = it.name;
   if (top) bindSwipe(c);
   return c;
@@ -555,9 +690,9 @@ function openReview(it, savedMarks, edit = false){
   const marks = (savedMarks || it.marks).map(m => ({ ...m, imgs: [...m.imgs] }));
   if (!marks.some(m => m.type === 'note')) marks.unshift(newMark('note', {}));
   draft = { marks, idx: items.indexOf(it), edit }; active = 0;
-  $('sheet-title').textContent = edit ? 'Modifier les remarques' : 'À reprendre';
+  $('sheet-title').textContent = t(edit ? 'editRemarks' : 'rework');
   $('sheet-name').textContent = it.name;
-  $('pin-img').src = srcOf(it); $('pin-img').alt = 'Plan ' + it.name;
+  $('pin-img').src = srcOf(it); $('pin-img').alt = t('planAlt', it.name);
   setTool(tool); drawReview(); drawList();
   $('sheet').hidden = false; setZoom(1); save();
 }
@@ -575,19 +710,19 @@ const hasContent = m => m.type !== 'note' || m.text.trim() || (m.expected || '')
 function canSend(){
   const any = draft.marks.some(hasContent), btn = $('send-ko');
   btn.disabled = !any && !draft.edit;
-  btn.textContent = !draft.edit ? 'Envoyer les remarques' : any ? 'Enregistrer' : 'Valider le plan (aucune remarque)';
+  btn.textContent = t(!draft.edit ? 'send' : any ? 'saveRemarks' : 'approveNoRemark');
 }
-function setTool(t){
-  tool = t;
-  document.querySelectorAll('.tool[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t));
-  $('pinboard').classList.toggle('drawing', t !== 'pin');
-  $('tool-hint').textContent = TOOL_HINT[t] + (zoom > 1 && t !== 'pin' ? ' Pour déplacer le plan zoomé, repassez sur Repère.' : '');
+function setTool(k){
+  tool = k;
+  document.querySelectorAll('.tool[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === k));
+  $('pinboard').classList.toggle('drawing', k !== 'pin');
+  $('tool-hint').textContent = t('toolHint')[k] + (zoom > 1 && k !== 'pin' ? t('toolHintZoom') : '');
 }
 const ZOOMS = [1, 1.5, 2, 3, 4];
 function setZoom(z){
   const sc = $('board-scroll');
   const fx = (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth, fy = (sc.scrollTop + sc.clientHeight / 2) / sc.scrollHeight;
-  zoom = z; $('pinboard').style.width = z * 100 + '%'; $('zoom-level').textContent = Math.round(z * 100) + ' %';
+  zoom = z; $('pinboard').style.width = z * 100 + '%'; $('zoom-level').textContent = pct(z);
   $('zoom-out').disabled = z === ZOOMS[0]; $('zoom-in').disabled = z === ZOOMS[ZOOMS.length - 1];
   sc.scrollLeft = fx * sc.scrollWidth - sc.clientWidth / 2; sc.scrollTop = fy * sc.scrollHeight - sc.clientHeight / 2; // keep the same spot centred
   setTool(tool);
@@ -601,9 +736,9 @@ const markActive = () => document.querySelectorAll('#marks .mark').forEach((li, 
 
 function thumb(blob, onRemove){
   const d = document.createElement('div'); d.className = 'thumb';
-  d.innerHTML = `<button type="button" class="open" aria-label="Agrandir l’image"><img alt=""></button>${onRemove ? '<button type="button" class="x" aria-label="Retirer l’image">×</button>' : ''}`;
+  d.innerHTML = `<button type="button" class="open" aria-label="${t('enlargeImage')}"><img alt=""></button>${onRemove ? `<button type="button" class="x" aria-label="${t('removeImage')}">×</button>` : ''}`;
   d.querySelector('img').src = urlOf(blob);
-  d.querySelector('.open').addEventListener('click', () => openViewer(urlOf(blob), 'Image jointe'));
+  d.querySelector('.open').addEventListener('click', () => openViewer(urlOf(blob), t('attachedImage')));
   if (onRemove) d.querySelector('.x').addEventListener('click', onRemove);
   return d;
 }
@@ -617,22 +752,22 @@ function drawList(){
   draft.marks.forEach((m, i) => {
     const num = m.type === 'note' ? 0 : ++n;
     const li = document.createElement('li'); li.className = 'mark' + (i === active ? ' active' : '');
-    li.innerHTML = `<div class="mark-head">${num ? `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span>` : ''}<span class="kind">${num ? TOOLS[m.type] : 'Remarque générale'}</span>
-      <select aria-label="Catégorie"><option value="">Catégorie</option>${CATS.map(c => `<option${c === m.cat ? ' selected' : ''}>${c}</option>`).join('')}</select>
-      <span class="sev" role="group" aria-label="Gravité"><button type="button" class="b" aria-pressed="${m.sev === 'b'}">Bloquant</button><button type="button" class="m" aria-pressed="${m.sev === 'm'}">Mineur</button></span>
-      ${num ? '<button type="button" class="link del">Supprimer</button>' : ''}</div>
+    li.innerHTML = `<div class="mark-head">${num ? `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span>` : ''}<span class="kind">${num ? t('tools')[m.type] : t('generalRemark')}</span>
+      <select aria-label="${t('category')}"><option value="">${t('category')}</option>${CATS.map(c => `<option value="${c}"${c === m.cat ? ' selected' : ''}>${term(c)}</option>`).join('')}</select>
+      <span class="sev" role="group" aria-label="${t('severity')}"><button type="button" class="b" aria-pressed="${m.sev === 'b'}">${t('sev').b}</button><button type="button" class="m" aria-pressed="${m.sev === 'm'}">${t('sev').m}</button></span>
+      ${num ? `<button type="button" class="link del">${t('del')}</button>` : ''}</div>
       <textarea id="m-${i}" rows="2"></textarea>
       <input type="text" id="e-${i}" class="expected">
       <div class="thumbs"></div>
-      <div><button type="button" class="tool small add-img">+ Image</button><input type="file" accept="image/*" multiple hidden></div>`;
+      <div><button type="button" class="tool small add-img">${t('addImage')}</button><input type="file" accept="image/*" multiple hidden></div>`;
     const ta = li.querySelector('textarea');
     ta.value = m.text;
-    ta.placeholder = num ? 'Ex. : cote 205 à corriger en 210' : 'Ex. : passer l’épaisseur à 8 mm sur toute la pièce';
-    ta.setAttribute('aria-label', num ? `Commentaire ${TOOLS[m.type]} ${num}` : 'Remarque générale');
+    ta.placeholder = t(num ? 'phMark' : 'phNote');
+    ta.setAttribute('aria-label', num ? `${t('comment')} ${t('tools')[m.type]} ${num}` : t('generalRemark'));
     ta.addEventListener('input', () => { m.text = ta.value; canSend(); saveSoon(); });
     const ex = li.querySelector('.expected');
-    ex.value = m.expected || ''; ex.placeholder = 'Correction attendue (facultatif). Ex. : H8, ép. 8 mm';
-    ex.setAttribute('aria-label', 'Correction attendue' + (num ? ` ${TOOLS[m.type]} ${num}` : ', remarque générale'));
+    ex.value = m.expected || ''; ex.placeholder = t('phExpected');
+    ex.setAttribute('aria-label', t('expected') + (num ? ` ${t('tools')[m.type]} ${num}` : t('expectedGeneral')));
     ex.addEventListener('input', () => { m.expected = ex.value; canSend(); saveSoon(); });
     li.addEventListener('focusin', () => { active = i; markActive(); });
     li.querySelector('select').addEventListener('change', e => { m.cat = e.target.value; saveSoon(); });
@@ -698,18 +833,18 @@ function renderControls(it){
   const count = () => $('checks-count').textContent = `${CHECKS.filter(c => ch[c]).length} / ${CHECKS.length}`;
   const box = $('checks'); box.innerHTML = '';
   CHECKS.forEach(c => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'check'; b.textContent = c; b.setAttribute('aria-pressed', !!ch[c]);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'check'; b.textContent = term(c); b.setAttribute('aria-pressed', !!ch[c]);
     b.addEventListener('click', () => { if (ch[c]) delete ch[c]; else ch[c] = true; b.setAttribute('aria-pressed', !!ch[c]); count(); save(); });
     box.appendChild(b);
   });
   count();
 }
 $('ref').addEventListener('input', e => { const it = items[cur]; if (!it) return; it.ref = e.target.value.trim(); saveSoon(); });
-$('checks-modify').addEventListener('click', () => { $('checks-text').value = CHECKS.join('\n'); $('checks-edit').hidden = false; $('checks-modify').hidden = true; $('checks-text').focus(); });
+$('checks-modify').addEventListener('click', () => { $('checks-text').value = CHECKS.map(term).join('\n'); $('checks-edit').hidden = false; $('checks-modify').hidden = true; $('checks-text').focus(); });
 const closeChecksEdit = () => { $('checks-edit').hidden = true; $('checks-modify').hidden = false; };
 $('checks-cancel').addEventListener('click', closeChecksEdit);
 $('checks-save').addEventListener('click', () => {
-  const list = [...new Set($('checks-text').value.split('\n').map(l => l.trim()).filter(Boolean))];
+  const list = [...new Set($('checks-text').value.split('\n').map(l => untr(l.trim())).filter(Boolean))];
   CHECKS = list.length ? list : [...DEFAULT_CHECKS];
   closeChecksEdit(); render();
 });
@@ -722,23 +857,22 @@ $('viewer-close').addEventListener('click', () => { $('viewer').hidden = true; }
 
 /* ---------- recap ---------- */
 function markLine(m, n){
-  const where = m.type === 'note' ? 'Général' : `${n}. ${TOOLS[m.type]} (x ${pct(target(m)[0])}, y ${pct(target(m)[1])})`;
-  const tags = [SEV[m.sev], m.cat].filter(Boolean).join(' · ');
-  const imgs = m.imgs.length ? ` (${plural(m.imgs.length, 'image')} ${m.imgs.length > 1 ? 'jointes' : 'jointe'})` : '';
-  const exp = (m.expected || '').trim() ? ` ; correction attendue : ${m.expected.trim()}` : '';
-  return `  • ${where} [${tags}] : ${m.text || '(sans commentaire)'}${exp}${imgs}`;
+  const where = m.type === 'note' ? t('general') : `${n}. ${t('tools')[m.type]} (x ${pct(target(m)[0])}, y ${pct(target(m)[1])})`;
+  const tags = [t('sev')[m.sev], term(m.cat)].filter(Boolean).join(' · ');
+  const imgs = m.imgs.length ? t('imagesAttached', m.imgs.length) : '';
+  const exp = (m.expected || '').trim() ? t('expectedInline', m.expected.trim()) : '';
+  return `  • ${where} [${tags}]${lang === 'fr' ? ' ' : ''}: ${m.text || t('noComment')}${exp}${imgs}`;
 }
+const checksLine = i => { const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]); return t('checksLine', CHECKS.length - miss.length, CHECKS.length, miss.map(term)); };
 function extraLines(i){
-  const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
-  const out = [`  Contrôles : ${CHECKS.length - miss.length}/${CHECKS.length}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : '')];
-  return out;
+  return ['  ' + checksLine(i)];
 }
 function recapText(list, date){
   const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
-  const lines = [`Revue de plans du ${date}`, '', `Validés (${ok.length})`, ...ok.flatMap(i => [`- ${i.name}`, ...extraLines(i)]), '', `À reprendre (${ko.length})`];
+  const lines = [t('reviewOf', date), '', t('approvedN', ok.length), ...ok.flatMap(i => [`- ${i.name}`, ...extraLines(i)]), '', t('reworkN', ko.length)];
   ko.forEach(i => {
     const nb = i.marks.filter(m => m.sev === 'b').length;
-    lines.push(`- ${i.name} : ${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}`);
+    lines.push(`- ${i.name}${lang === 'fr' ? ' ' : ''}: ${t('koCounts', nb, i.marks.length - nb)}`);
     let n = 0;
     i.marks.forEach(m => lines.push(markLine(m, m.type === 'note' ? 0 : ++n)));
     lines.push(...extraLines(i));
@@ -751,8 +885,8 @@ function renderRecap(show){
   items.forEach(it => {
     const nb = it.marks.filter(m => m.sev === 'b').length;
     const f = document.createElement('article'); f.className = 'item';
-    f.innerHTML = `<div class="pinboard"><img></div><div class="item-body"><span class="chip ${it.decision}">${it.decision === 'ok' ? 'Validé' : 'À reprendre' + (nb ? ` · ${plural(nb, 'bloquant')}` : '')}</span><strong></strong><ul class="rmarks"></ul></div>`;
-    const img = f.querySelector('img'); img.src = srcOf(it); img.alt = 'Plan ' + it.name;
+    f.innerHTML = `<div class="pinboard"><img></div><div class="item-body"><span class="chip ${it.decision}">${it.decision === 'ok' ? t('approved') : t('rework') + (nb ? ` · ${t('blockingN', nb)}` : '')}</span><strong></strong><ul class="rmarks"></ul></div>`;
+    const img = f.querySelector('img'); img.src = srcOf(it); img.alt = t('planAlt', it.name);
     f.querySelector('strong').textContent = it.name;
     drawOverlay(f.querySelector('.pinboard'), it.marks, null);
     const ul = f.querySelector('ul'); let n = 0;
@@ -761,25 +895,25 @@ function renderRecap(show){
       const li = document.createElement('li');
       li.innerHTML = `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span><div><span class="meta"></span><p></p><div class="thumbs"></div></div>`;
       li.querySelector('.meta').textContent = markMeta(m);
-      li.querySelector('p').textContent = m.text || '(sans commentaire)';
+      li.querySelector('p').textContent = m.text || t('noComment');
       m.imgs.forEach(b => li.querySelector('.thumbs').appendChild(thumb(b, null)));
       ul.appendChild(li);
     });
     if (!ul.children.length) ul.remove();
     const act = document.createElement('div'); act.className = 'item-actions';
-    act.innerHTML = `<button type="button" class="tool small">${it.decision === 'ko' ? 'Modifier les remarques' : 'Ajouter des remarques'}</button>`;
+    act.innerHTML = `<button type="button" class="tool small">${t(it.decision === 'ko' ? 'editRemarks' : 'addRemarks')}</button>`;
     act.querySelector('button').addEventListener('click', () => openReview(it, null, true));
     f.querySelector('.item-body').appendChild(act);
     const body = f.querySelector('.item-body');
     extraLines(it).forEach(l => { const e = document.createElement('span'); e.className = 'meta'; e.textContent = l.trim(); body.appendChild(e); });
     grid.appendChild(f);
   });
-  $('recap-text').value = recapText(items, new Date().toLocaleDateString('fr-FR'));
+  $('recap-text').value = recapText(items, today());
 }
 $('copy').addEventListener('click', () => {
   const ta = $('recap-text'), btn = $('copy');
-  const done = () => { btn.textContent = 'Copié'; setTimeout(() => btn.textContent = 'Copier le récap', 1500); };
-  navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); btn.textContent = 'Sélectionné, faites Ctrl+C'; });
+  const done = () => { btn.textContent = t('copied'); setTimeout(() => btn.textContent = t('copy'), 1500); };
+  navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); btn.textContent = t('selectedCopy'); });
 });
 let jspdfReady = null;
 const jspdfLib = () => jspdfReady ||= loadScript('vendor/jspdf/jspdf.umd.min.js').then(() => window.jspdf);
@@ -797,15 +931,15 @@ async function buildPdf(){
     }
   };
   // cover: the same summary as the text recap
-  const date = new Date().toLocaleDateString('fr-FR');
-  write('Revue de plans', 22, { bold: true }); y += 2;
+  const date = today();
+  write(t('title'), 22, { bold: true }); y += 2;
   const ok = items.filter(i => i.decision === 'ok').length;
-  write(`${date} · ${plural(items.length, 'plan')} · ${plural(ok, 'validé')} · ${items.length - ok} à reprendre`, 11, { color: MUTED }); y += 4;
+  write(`${date} · ${t('summary', items.length, ok, items.length - ok)}`, 11, { color: MUTED }); y += 4;
   recapText(items, date).split('\n').slice(2).forEach(l => l ? write(l, 9.5, { bold: !l.startsWith(' ') && !l.startsWith('-') }) : (y += 2));
   for (const it of items){
     doc.addPage(); y = M;
     write(it.name, 14, { bold: true });
-    write(it.decision === 'ok' ? 'VALIDÉ' : 'À REPRENDRE', 10, { bold: true, color: it.decision === 'ok' ? GREEN : RED });
+    write(t(it.decision === 'ok' ? 'APPROVED' : 'REWORK'), 10, { bold: true, color: it.decision === 'ok' ? GREEN : RED });
     y += 3; const top = y, colW = 182;
     const cv = await annotated(srcOf(it), it.marks);
     const r = Math.min(colW / cv.width, (PH - M - top) / cv.height);
@@ -815,17 +949,17 @@ async function buildPdf(){
     it.marks.forEach(m => {
       const num = m.type === 'note' ? 'G' : ++n;
       write(`${num}. ${markMeta(m)}`, 8, { bold: true, color: m.sev === 'b' ? RED : ORANGE, x, w });
-      write(m.text || '(sans commentaire)', 9.5, { x, w });
-      if ((m.expected || '').trim()) write('Correction attendue : ' + m.expected.trim(), 9, { bold: true, x, w });
-      if (m.imgs.length) write(`${plural(m.imgs.length, 'image')} en annexe`, 8, { color: MUTED, x, w });
+      write(m.text || t('noComment'), 9.5, { x, w });
+      if ((m.expected || '').trim()) write(t('expectedLine') + m.expected.trim(), 9, { bold: true, x, w });
+      if (m.imgs.length) write(t('imagesAppendix', m.imgs.length), 8, { color: MUTED, x, w });
       y += 2;
     });
     extraLines(it).forEach(l => write(l.trim(), 8.5, { color: MUTED, x, w }));
     // attached images, six per page
     n = 0;
-    const photos = it.marks.flatMap(m => { const num = m.type === 'note' ? 'remarque générale' : 'remarque ' + (++n); return m.imgs.map(b => ({ b, label: `${it.name} · ${num}` })); });
+    const photos = it.marks.flatMap(m => { const num = t('remarkN', m.type === 'note' ? 0 : ++n); return m.imgs.map(b => ({ b, label: `${it.name} · ${num}` })); });
     for (let k = 0; k < photos.length; k++){
-      if (k % 6 === 0){ doc.addPage(); y = M; write(`${it.name} : images jointes`, 12, { bold: true }); }
+      if (k % 6 === 0){ doc.addPage(); y = M; write(t('attachedImages', it.name), 12, { bold: true }); }
       const col = k % 3, rowI = Math.floor(k % 6 / 3), cw = (PW - 2 * M - 12) / 3, ch = (PH - M - 22) / 2 - 8;
       const cx = M + col * (cw + 6), cy = 22 + rowI * (ch + 8);
       const pc = await annotated(urlOf(photos[k].b), [], 1400), pr = Math.min(cw / pc.width, ch / pc.height);
@@ -839,11 +973,11 @@ async function buildPdf(){
 // share sheet where the browser has one (iPhone), download otherwise
 async function deliver(file, btn, label){
   if (navigator.canShare && navigator.canShare({ files: [file] })){
-    try { await navigator.share({ files: [file], title: 'Revue de plans' }); btn.textContent = label; return; }
+    try { await navigator.share({ files: [file], title: t('title') }); btn.textContent = label; return; }
     catch (e){
       if (e.name === 'AbortError'){ btn.textContent = label; return; } // the user closed the share sheet
       // Safari refuses to share once preparing the file took too long after the tap: the next tap shares the ready file
-      if (e.name === 'NotAllowedError' && !btn.dataset.retried){ btn.dataset.retried = '1'; btn.textContent = 'Toucher pour partager (fichier prêt)'; return; }
+      if (e.name === 'NotAllowedError' && !btn.dataset.retried){ btn.dataset.retried = '1'; btn.textContent = t('tapToShare'); return; }
       console.warn('partage impossible, téléchargement à la place', e);
     }
   }
@@ -851,18 +985,18 @@ async function deliver(file, btn, label){
   const url = URL.createObjectURL(file), a = document.createElement('a');
   a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
-  btn.textContent = 'Fichier téléchargé'; setTimeout(() => btn.textContent = label, 2500);
+  btn.textContent = t('downloaded'); setTimeout(() => btn.textContent = label, 2500);
 }
-const fileStem = () => `revue-plans-${new Date().toISOString().slice(0, 10)}`;
+const fileStem = () => `${t('fileStem')}-${new Date().toISOString().slice(0, 10)}`;
 $('pdf').addEventListener('click', async () => {
   const btn = $('pdf');
   try {
     if (!pdfFile){
-      btn.disabled = true; btn.textContent = 'Préparation du PDF…';
+      btn.disabled = true; btn.textContent = t('preparingPdf');
       pdfFile = new File([await buildPdf()], fileStem() + '.pdf', { type: 'application/pdf' });
     }
-    await deliver(pdfFile, btn, 'Exporter en PDF');
-  } catch (e){ console.error(e); pdfFile = null; btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
+    await deliver(pdfFile, btn, t('exportPdf'));
+  } catch (e){ console.error(e); pdfFile = null; btn.textContent = t('exportFailed', e.name || e.message); }
   finally { btn.disabled = false; }
 });
 
@@ -871,7 +1005,6 @@ let jszipReady = null;
 const jszipLib = () => jszipReady ||= loadScript('vendor/jszip/jszip.min.js').then(() => window.JSZip);
 const slug = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'plan';
 const TOOL_KEY = { note: 'general', pin: 'repere', rect: 'zone', arrow: 'fleche', draw: 'main_levee' };
-const TOOL_WORD = { repere: 'repère', zone: 'zone', fleche: 'flèche', main_levee: 'dessin à main levée' };
 const r4 = v => +v.toFixed(4), r1 = v => +v.toFixed(1);
 const toBlob = (cv, type = 'image/png', q) => new Promise(r => cv.toBlob(r, type, q));
 // area a remark is about, as a fraction of the page; a point becomes a small square around it
@@ -933,106 +1066,86 @@ async function buildZip(){
       controles: { verifies: CHECKS.filter(c => ch[c]), non_verifies: CHECKS.filter(c => !ch[c]) }, remarques });
   }
   const data = { format: 'revue-plans/1', date: new Date().toISOString(),
-    coordonnees: 'Origine au coin haut gauche de la page. zone/point : fraction de la largeur et de la hauteur de la page (0 à 1). zone_mm/point_mm : millimètres sur la feuille (null si le plan ne vient pas d’un PDF). zone_dxf/point_dxf : coordonnées dans le repère du dessin DXF, Y vers le haut, unités de plan.dxf.unites (null si le plan ne vient pas d’un DXF). Pour une flèche, le point est la pointe.',
+    coordonnees: t('coords'),
     plans };
   zip.file('revue.json', JSON.stringify(data, null, 2) + '\n');
   zip.file('PROMPT.md', promptMd(data));
   return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
 }
 function whereText(r, units){
-  const z = r.zone_mm, f = r.zone, w = TOOL_WORD[r.outil], u = units ? `, en ${units}` : '';
-  if (r.point_dxf) return `${w} visant le point X ${r.point_dxf.x}, Y ${r.point_dxf.y} (repère du DXF${u})`;
-  if (r.zone_dxf){ const d = r.zone_dxf; return `${w} couvrant X ${d.x_min} à ${d.x_max}, Y ${d.y_min} à ${d.y_max} (repère du DXF${u})`; }
-  if (r.point){ const p = r.point_mm; return `${w} visant le point ${p ? `x ${p.x} mm, y ${p.y} mm` : `x ${pct(r.point.x)}, y ${pct(r.point.y)} de la page`}`; }
-  return z ? `${w} couvrant x ${z.x} à ${r1(z.x + z.w)} mm, y ${z.y} à ${r1(z.y + z.h)} mm`
-           : `${w} couvrant x ${pct(f.x)} à ${pct(f.x + f.w)}, y ${pct(f.y)} à ${pct(f.y + f.h)} de la page`;
+  const z = r.zone_mm, f = r.zone, w = t('toolWord')[r.outil], W = t('where'), to = W.to;
+  if (r.point_dxf) return W.pt(w, `X ${r.point_dxf.x}, Y ${r.point_dxf.y}`) + W.dxf(units);
+  if (r.zone_dxf){ const d = r.zone_dxf; return W.zone(w, `X ${d.x_min}${to}${d.x_max}, Y ${d.y_min}${to}${d.y_max}`) + W.dxf(units); }
+  if (r.point){ const p = r.point_mm; return W.pt(w, p ? `x ${p.x} mm, y ${p.y} mm` : `x ${pct(r.point.x)}, y ${pct(r.point.y)}${W.page}`); }
+  return z ? W.zone(w, `x ${z.x}${to}${r1(z.x + z.w)} mm, y ${z.y}${to}${r1(z.y + z.h)} mm`)
+           : W.zone(w, `x ${pct(f.x)}${to}${pct(f.x + f.w)}, y ${pct(f.y)}${to}${pct(f.y + f.h)}${W.page}`);
 }
 function promptMd(d){
   const ko = d.plans.filter(p => p.decision === 'a_reprendre'), ok = d.plans.filter(p => p.decision === 'valide');
   const ex = (ko.find(p => p.remarques.length) || { remarques: [{ id: 'REF-R1' }] }).remarques[0].id;
   const fileOf = p => `${p.fichier}${p.page ? `, page ${p.page}` : ''}`;
-  const L = ['# Corrections à apporter à des plans de fabrication', '',
-    'Tu as produit les plans de fabrication ci-dessous (en PDF). Un relecteur humain les a contrôlés. Corrige ceux qui sont « à reprendre » en suivant ses remarques, puis régénère les PDF corrigés.', '',
-    '## Règles', '',
-    '1. Traite toutes les remarques **bloquantes**. Traite les **mineures** si cela ne crée pas d’autre problème.',
-    '2. Quand une « correction attendue » est indiquée, applique-la exactement.',
-    '3. Ne modifie rien d’autre que ce qui est demandé. Garde la référence de chaque plan ; si le cartouche porte un indice de révision, incrémente-le.',
-    '4. Si une remarque est ambiguë ou impossible à appliquer, ne devine pas : signale-la.',
-    '5. Les contrôles « non vérifiés » n’ont pas été faits par le relecteur : vérifie-les aussi.', '',
-    '## Localiser une remarque', '',
-    '- Les positions partent du **coin haut gauche** de la page, en millimètres sur la feuille quand c’est connu, sinon en % de la largeur et de la hauteur de la page.',
-    '- Pour un plan **DXF**, les positions sont données dans le repère du dessin (mêmes coordonnées que dans le fichier, Y vers le haut) : retrouve les entités concernées à ces coordonnées.',
-    '- Pour une flèche, le point indiqué est l’endroit **visé** (la pointe).',
-    '- Si tu as accès aux fichiers joints : `plans/<ref>.png` montre le plan annoté avec ses repères numérotés, `zones/<id>.png` un zoom sur l’endroit de chaque remarque, `images/` les photos et captures du relecteur. Sans les images, les positions suffisent.',
-    '- Les mêmes données, structurées, sont dans `revue.json`.', '',
-    '## Format de ta réponse', '',
-    'Termine par un tableau avec une ligne par remarque :', '',
-    '| id | statut | ce qui a été fait, ou pourquoi ce n’est pas fait |', '|---|---|---|', `| ${ex} | corrigé | … |`, '',
-    'Statuts possibles : `corrigé`, `non corrigé`, `à clarifier`.', '',
-    `## Plans à reprendre (${ko.length})`, ''];
-  if (!ko.length) L.push('Aucun.', '');
+  const L = [...t('prompt'), ...t('promptExample', ex), t('pToRework', ko.length), ''];
+  if (!ko.length) L.push(t('none'), '');
   ko.forEach(p => {
     const nb = p.remarques.filter(r => r.gravite === 'bloquant').length, nm = p.remarques.length - nb;
-    L.push(`### ${p.ref}`, '', `- Fichier : ${fileOf(p)}` + (p.format_feuille_mm ? ` · feuille de ${p.format_feuille_mm.w} × ${p.format_feuille_mm.h} mm` : ''),
-      `- ${nb} remarque${nb > 1 ? 's' : ''} bloquante${nb > 1 ? 's' : ''}, ${nm} mineure${nm > 1 ? 's' : ''} · plan annoté : \`${p.image_annotee}\``);
-    if (p.controles.non_verifies.length) L.push(`- Contrôles non vérifiés : ${p.controles.non_verifies.join(', ')}`);
+    L.push(`### ${p.ref}`, '', t('pFile', fileOf(p)) + (p.format_feuille_mm ? t('pSheet', p.format_feuille_mm.w, p.format_feuille_mm.h) : ''),
+      t('pCounts', nb, nm, p.image_annotee));
+    if (p.controles.non_verifies.length) L.push(t('pUnchecked', p.controles.non_verifies.map(term).join(', ')));
     L.push('');
     p.remarques.forEach(r => {
-      L.push(`#### ${r.id} · ${r.gravite}${r.categorie ? ' · ' + r.categorie : ''}`, '');
-      L.push(`- Où : ${r.outil === 'general' ? 'remarque générale, sur tout le plan' : whereText(r, p.dxf && p.dxf.unites)}`);
-      L.push(`- Constat : ${r.commentaire || '(pas de commentaire : voir l’image de la zone)'}`);
-      if (r.correction_attendue) L.push(`- Correction attendue : ${r.correction_attendue}`);
+      L.push(`#### ${r.id} · ${t('grav')[r.gravite]}${r.categorie ? ' · ' + term(r.categorie) : ''}`, '');
+      L.push(t('pWhere', r.outil === 'general' ? t('pWhereGeneral') : whereText(r, p.dxf && p.dxf.unites)));
+      L.push(t('pFinding', r.commentaire));
+      if (r.correction_attendue) L.push(t('pExpected', r.correction_attendue));
       const files = [r.image_zone, ...r.pieces_jointes].filter(Boolean);
-      if (files.length) L.push(`- Images : ${files.map(f => '`' + f + '`').join(', ')}`);
+      if (files.length) L.push(t('pImages', files.map(f => '`' + f + '`').join(', ')));
       L.push('');
     });
   });
-  L.push(`## Plans validés, à ne pas modifier (${ok.length})`, '');
+  L.push(t('pApproved', ok.length), '');
   ok.forEach(p => L.push(`- ${p.ref} (${fileOf(p)})`));
-  if (!ok.length) L.push('Aucun.');
+  if (!ok.length) L.push(t('none'));
   return L.join('\n') + '\n';
 }
 $('zip').addEventListener('click', async () => {
   const btn = $('zip');
   try {
     if (!zipFile){
-      btn.disabled = true; btn.textContent = 'Préparation du .zip…';
+      btn.disabled = true; btn.textContent = t('preparingZip');
       zipFile = new File([await buildZip()], fileStem() + '.zip', { type: 'application/zip' });
     }
-    await deliver(zipFile, btn, 'Exporter pour l’IA (.zip)');
-  } catch (e){ console.error(e); zipFile = null; btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
+    await deliver(zipFile, btn, t('exportZip'));
+  } catch (e){ console.error(e); zipFile = null; btn.textContent = t('exportFailed', e.name || e.message); }
   finally { btn.disabled = false; }
 });
 
 const cell = t => String(t).replace(/\|/g, '\\|').replace(/\s*\n\s*/g, '<br>');
 function recapMarkdown(list, date){
   const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
-  const checksLine = i => { const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
-    return `Contrôles : ${CHECKS.length - miss.length}/${CHECKS.length}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : ''); };
-  const md = [`# Revue de plans du ${date}`, '', `${plural(list.length, 'plan')} · ${plural(ok.length, 'validé')} · ${ko.length} à reprendre`, ''];
-  md.push(`## À reprendre (${ko.length})`, '');
-  if (!ko.length) md.push('Aucun.', '');
+  const md = [`# ${t('reviewOf', date)}`, '', t('summary', list.length, ok.length, ko.length), ''];
+  md.push(`## ${t('reworkN', ko.length)}`, '');
+  if (!ko.length) md.push(t('none'), '');
   ko.forEach(i => {
     const nb = i.marks.filter(m => m.sev === 'b').length;
-    md.push(`### ${i.name}`, '', `**${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}** · ${checksLine(i)}`, '');
-    md.push('| # | Type | Gravité | Catégorie | Position | Commentaire | Correction attendue | Images |', '|---|---|---|---|---|---|---|---|');
+    md.push(`### ${i.name}`, '', `**${t('koCounts', nb, i.marks.length - nb)}** · ${checksLine(i)}`, '');
+    md.push(t('mdHead'), '|---|---|---|---|---|---|---|---|');
     let n = 0;
     i.marks.forEach(m => {
       const general = m.type === 'note', [x, y] = general ? [] : target(m);
-      md.push(`| ${general ? 'G' : ++n} | ${general ? 'Général' : TOOLS[m.type]} | ${SEV[m.sev]} | ${cell(m.cat || '–')} | ${general ? '–' : `x ${pct(x)}, y ${pct(y)}`} | ${cell(m.text || '(sans commentaire)')} | ${cell((m.expected || '').trim() || '–')} | ${m.imgs.length || '–'} |`);
+      md.push(`| ${general ? 'G' : ++n} | ${general ? t('general') : t('tools')[m.type]} | ${t('sev')[m.sev]} | ${cell(term(m.cat) || '–')} | ${general ? '–' : `x ${pct(x)}, y ${pct(y)}`} | ${cell(m.text || t('noComment'))} | ${cell((m.expected || '').trim() || '–')} | ${m.imgs.length || '–'} |`);
     });
     md.push('');
   });
-  md.push(`## Validés (${ok.length})`, '');
+  md.push(`## ${t('approvedN', ok.length)}`, '');
   ok.forEach(i => md.push(`- **${i.name}** · ${checksLine(i)}`));
-  if (!ok.length) md.push('Aucun.');
-  md.push('', '_Positions en % de la largeur et de la hauteur du plan, depuis le coin haut gauche. Les images jointes sont dans l’export PDF._', '');
+  if (!ok.length) md.push(t('none'));
+  md.push('', t('mdFoot'), '');
   return md.join('\n');
 }
 $('md').addEventListener('click', async () => {
   const btn = $('md');
-  const file = new File([recapMarkdown(items, new Date().toLocaleDateString('fr-FR'))], fileStem() + '.md', { type: 'text/plain' }); // iOS shares text/plain, not text/markdown
-  try { await deliver(file, btn, 'Exporter en .md'); } catch (e){ console.error(e); btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
+  const file = new File([recapMarkdown(items, today())], fileStem() + '.md', { type: 'text/plain' }); // iOS shares text/plain, not text/markdown
+  try { await deliver(file, btn, t('exportMd')); } catch (e){ console.error(e); btn.textContent = t('exportFailed', e.name || e.message); }
 });
 $('reset').addEventListener('click', () => { items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render(); });
 
@@ -1050,12 +1163,31 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'Backspace') undo();
 });
 
+/* ---------- language switch ---------- */
+// sample sheets are stored with their texts, so they are redrawn in the new language (decisions and remarks kept)
+const localizeSamples = () => { if (sample) items = items.map((it, i) => ({ ...it, ...samples()[i] })); };
+function applyLang(){
+  document.documentElement.lang = lang; document.title = t('title'); $('lang').value = lang;
+  document.querySelectorAll('[data-i18n]').forEach(e => e.textContent = t(e.dataset.i18n));
+  document.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); if (e.title) e.title = t(e.dataset.i18nAria); });
+  document.querySelectorAll('.tool[data-tool] span').forEach(e => e.textContent = t('tools')[e.parentNode.dataset.tool]);
+  if (sample) $('hint').textContent = t('hintSample');
+}
+$('lang').addEventListener('change', e => {
+  lang = e.target.value; try { localStorage.setItem('lang', lang); } catch {}
+  applyLang(); localizeSamples(); render();
+  if (draft){ $('sheet-title').textContent = t(draft.edit ? 'editRemarks' : 'rework'); setTool(tool); drawList(); }
+  if (!$('checks-edit').hidden) $('checks-text').value = CHECKS.map(term).join('\n');
+});
+
 (async () => {
+  applyLang();
   let st = null;
   try { st = await idb('readonly', s => s.get('state')); } catch {}
   if (st && st.checks && st.checks.length) CHECKS = st.checks;
   if (st && st.items && st.items.length){ ({ items, cur, past, sample } = st); items = items.map(migrate); }
-  else { items = SAMPLES.map(mk); sample = true; cur = 0; past = []; }
+  else { items = samples().map(mk); sample = true; cur = 0; past = []; }
+  localizeSamples();
   if (!sample) $('hint').hidden = true;
   render();
   // a remark being written when the tab was closed comes back as it was

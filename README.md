@@ -13,6 +13,7 @@
 - **⚡ Zéro friction** : un seul fichier HTML. Pas de build, pas d'installation, pas de compte.
 - **💾 Rien ne se perd** : la revue en cours est sauvegardée automatiquement, jusqu'à la remarque en cours d'écriture.
 - **🤖 Prêt pour l'IA** : un export .zip qu'un agent sait lire et corriger directement.
+- **🌍 Français / English** : l'interface et tous les exports suivent la langue choisie en haut de page (par défaut, celle du navigateur).
 
 ## Comment ça marche
 

@@ -41,7 +41,7 @@ h2{font-size:1.4rem}
 .btn.ghost{background:transparent;color:var(--accent)}
 .btn.danger{background:var(--ko);border-color:var(--ko)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 .deck{position:relative;width:100%;aspect-ratio:1188/930;max-width:100%}
 .card{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);
@@ -109,7 +109,7 @@ select{font:14px var(--body);color:var(--ink);background:var(--bg);border:1px so
 .sev button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 9px;cursor:pointer}
 .sev button.b[aria-pressed="true"]{background:var(--ko);color:#fff}
 .sev button.m[aria-pressed="true"]{background:var(--warn);color:#fff}
-textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
+textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .thumbs:empty{display:none}
 .thumb{position:relative;width:64px;height:64px;flex:none}
@@ -143,6 +143,9 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 .chip.ok{color:var(--ok)} .chip.ko{color:var(--ko)}
 #recap-text{font:13px/1.5 var(--mono)}
 .controls{display:flex;flex-direction:column;gap:10px}
+.ref-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.ref-row label{font:700 1.1rem var(--display);text-transform:uppercase;letter-spacing:.04em}
+.ref-row input{flex:1;min-width:160px;width:auto}
 .controls details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
 .controls summary{cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:700 1.1rem var(--display);text-transform:uppercase;letter-spacing:.04em;list-style:none}
 .controls summary::-webkit-details-marker{display:none}
@@ -181,6 +184,7 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
     </div>
     <p class="keys mono">← à reprendre · → valider · espace agrandir</p>
     <section id="controls" class="controls" hidden>
+      <div class="ref-row"><label for="ref">Référence du plan</label><input id="ref" type="text" autocomplete="off" spellcheck="false"></div>
       <details id="checks-box" open>
         <summary><span>Contrôles</span><span id="checks-count" class="mono"></span></summary>
         <div id="checks" class="checks"></div>
@@ -195,7 +199,7 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
   </main>
 
   <section id="recap" hidden>
-    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="md" class="btn ghost">Exporter en .md</button><button id="pdf" class="btn">Exporter en PDF</button></div></div>
+    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="md" class="btn ghost">Exporter en .md</button><button id="pdf" class="btn ghost">Exporter en PDF</button><button id="zip" class="btn">Exporter pour l’IA (.zip)</button></div></div>
     <div id="recap-grid" class="grid"></div>
     <label for="recap-text" class="hint">Texte à transmettre au bureau d'études :</label>
     <textarea id="recap-text" readonly rows="10"></textarea>
@@ -236,7 +240,7 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 
 <script>
 const $ = id => document.getElementById(id);
-let items = [], cur = 0, past = [], sample = true, draft = null, tool = 'pin', active = 0, zoom = 1, pdfFile = null;
+let items = [], cur = 0, past = [], sample = true, draft = null, tool = 'pin', active = 0, zoom = 1, pdfFile = null, zipFile = null;
 const DEFAULT_CHECKS = ['Cartouche complet', 'Indice et date', 'Échelle', 'Cotation complète', 'Tolérances', 'Matière', 'État de surface', 'Traitement / finition'];
 let CHECKS = [...DEFAULT_CHECKS];
 
@@ -278,13 +282,17 @@ const urls = new WeakMap();
 const urlOf = b => { let u = urls.get(b); if (!u) urls.set(b, u = URL.createObjectURL(b)); return u; };
 const srcOf = it => it.src || urlOf(it.blob);
 const mk = o => ({ ...o, decision: null, marks: [] });
-const newMark = (type, geo) => ({ type, ...geo, text: '', cat: '', sev: 'b', imgs: [] });
+const newMark = (type, geo) => ({ type, ...geo, text: '', expected: '', cat: '', sev: 'b', imgs: [] });
 // reviews saved by the first version used { note, pins }
 const migrate = it => it.marks ? it : { ...it, note: undefined, pins: undefined, marks: [
   ...(it.note ? [{ ...newMark('note', {}), text: it.note }] : []),
   ...(it.pins || []).map(p => ({ ...newMark('pin', { x: p.x, y: p.y }), text: p.text })) ] };
 const anchor = m => m.type === 'arrow' ? [m.x1, m.y1] : m.type === 'draw' ? m.pts[0] : [m.x, m.y];
 const pct = v => Math.round(v * 100) + ' %';
+// the point a remark is about: an arrow points at its head, the label sits at its tail
+const target = m => m.type === 'arrow' ? [m.x2, m.y2] : anchor(m);
+const defaultRef = it => it.name.replace(/\.pdf · p\.(\d+)$/i, '_p$1').replace(/\.(pdf|png|jpe?g|webp|gif|heic)$/i, '');
+const refOf = it => it.ref || defaultRef(it);
 const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
 const markMeta = m => [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image illisible')); i.src = src; });
@@ -313,7 +321,8 @@ async function pdfPages(file){
     const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-    out.push({ name: doc.numPages > 1 ? `${file.name} · p.${n}` : file.name, blob });
+    const mm = v => +(v * 25.4 / 72).toFixed(1); // PDF points to millimetres
+    out.push({ name: doc.numPages > 1 ? `${file.name} · p.${n}` : file.name, blob, source: file.name, page: n, pageMm: { w: mm(v1.width), h: mm(v1.height) } });
   }
   return out;
 }
@@ -363,13 +372,13 @@ function svgMarks(marks, W, H, labels = false){
   return `<svg xmlns="http://www.w3.org/2000/svg" class="ink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${out}${lab}</svg>`;
 }
 // the plan with its marks burnt in, for the PDF
-async function annotated(src, marks, maxSide = 2000){
+async function annotated(src, marks, maxSide = 2000, labels = true){
   const img = await loadImg(src);
   const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
   const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * k) || 1188; cv.height = Math.round(img.naturalHeight * k) || 840;
   const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
   if (marks.some(m => m.type !== 'note')){
-    const svg = svgMarks(marks, cv.width, cv.height, true).replace('<svg ', `<svg width="${cv.width}" height="${cv.height}" `);
+    const svg = svgMarks(marks, cv.width, cv.height, labels).replace('<svg ', `<svg width="${cv.width}" height="${cv.height}" `);
     ctx.drawImage(await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)), 0, 0);
   }
   return cv;
@@ -412,7 +421,7 @@ function render(){
     deck.appendChild(cardEl(cur, true));
   }
   renderControls(done ? null : items[cur]);
-  pdfFile = null; $('pdf').textContent = 'Exporter en PDF'; $('md').textContent = 'Exporter en .md';
+  pdfFile = null; zipFile = null; $('pdf').textContent = 'Exporter en PDF'; $('md').textContent = 'Exporter en .md'; $('zip').textContent = 'Exporter pour l’IA (.zip)';
   renderRecap(done && n > 0);
   save();
 }
@@ -515,6 +524,7 @@ function drawList(){
       <span class="sev" role="group" aria-label="Gravité"><button type="button" class="b" aria-pressed="${m.sev === 'b'}">Bloquant</button><button type="button" class="m" aria-pressed="${m.sev === 'm'}">Mineur</button></span>
       ${num ? '<button type="button" class="link del">Supprimer</button>' : ''}</div>
       <textarea id="m-${i}" rows="2"></textarea>
+      <input type="text" id="e-${i}" class="expected">
       <div class="thumbs"></div>
       <div><button type="button" class="tool small add-img">+ Image</button><input type="file" accept="image/*" multiple hidden></div>`;
     const ta = li.querySelector('textarea');
@@ -522,6 +532,10 @@ function drawList(){
     ta.placeholder = num ? 'Ex. : cote 205 à corriger en 210' : 'Ex. : passer l’épaisseur à 8 mm sur toute la pièce';
     ta.setAttribute('aria-label', num ? `Commentaire ${TOOLS[m.type]} ${num}` : 'Remarque générale');
     ta.addEventListener('input', () => { m.text = ta.value; canSend(); saveSoon(); });
+    const ex = li.querySelector('.expected');
+    ex.value = m.expected || ''; ex.placeholder = 'Correction attendue (facultatif). Ex. : H8, ép. 8 mm';
+    ex.setAttribute('aria-label', 'Correction attendue' + (num ? ` ${TOOLS[m.type]} ${num}` : ', remarque générale'));
+    ex.addEventListener('input', () => { m.expected = ex.value; saveSoon(); });
     li.addEventListener('focusin', () => { active = i; markActive(); });
     li.querySelector('select').addEventListener('change', e => { m.cat = e.target.value; saveSoon(); });
     li.querySelectorAll('.sev button').forEach(b => b.addEventListener('click', () => { m.sev = b.className; drawList(); drawReview(); saveSoon(); }));
@@ -581,6 +595,7 @@ $('cancel-ko').addEventListener('click', () => closeReview(false));
 /* ---------- checklist, under the card ---------- */
 function renderControls(it){
   $('controls').hidden = !it; if (!it) return;
+  $('ref').value = refOf(it);
   const ch = it.checks || (it.checks = {});
   const count = () => $('checks-count').textContent = `${CHECKS.filter(c => ch[c]).length} / ${CHECKS.length}`;
   const box = $('checks'); box.innerHTML = '';
@@ -591,6 +606,7 @@ function renderControls(it){
   });
   count();
 }
+$('ref').addEventListener('input', e => { const it = items[cur]; if (!it) return; it.ref = e.target.value.trim(); saveSoon(); });
 $('checks-modify').addEventListener('click', () => { $('checks-text').value = CHECKS.join('\n'); $('checks-edit').hidden = false; $('checks-modify').hidden = true; $('checks-text').focus(); });
 const closeChecksEdit = () => { $('checks-edit').hidden = true; $('checks-modify').hidden = false; };
 $('checks-cancel').addEventListener('click', closeChecksEdit);
@@ -608,10 +624,11 @@ $('viewer-close').addEventListener('click', () => { $('viewer').hidden = true; }
 
 /* ---------- recap ---------- */
 function markLine(m, n){
-  const where = m.type === 'note' ? 'Général' : `${n}. ${TOOLS[m.type]} (x ${pct(anchor(m)[0])}, y ${pct(anchor(m)[1])})`;
+  const where = m.type === 'note' ? 'Général' : `${n}. ${TOOLS[m.type]} (x ${pct(target(m)[0])}, y ${pct(target(m)[1])})`;
   const tags = [SEV[m.sev], m.cat].filter(Boolean).join(' · ');
   const imgs = m.imgs.length ? ` (${plural(m.imgs.length, 'image')} ${m.imgs.length > 1 ? 'jointes' : 'jointe'})` : '';
-  return `  • ${where} [${tags}] : ${m.text || '(sans commentaire)'}${imgs}`;
+  const exp = (m.expected || '').trim() ? ` ; correction attendue : ${m.expected.trim()}` : '';
+  return `  • ${where} [${tags}] : ${m.text || '(sans commentaire)'}${exp}${imgs}`;
 }
 function extraLines(i){
   const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
@@ -697,6 +714,7 @@ async function buildPdf(){
       const num = m.type === 'note' ? 'G' : ++n;
       write(`${num}. ${markMeta(m)}`, 8, { bold: true, color: m.sev === 'b' ? RED : ORANGE, x, w });
       write(m.text || '(sans commentaire)', 9.5, { x, w });
+      if ((m.expected || '').trim()) write('Correction attendue : ' + m.expected.trim(), 9, { bold: true, x, w });
       if (m.imgs.length) write(`${plural(m.imgs.length, 'image')} en annexe`, 8, { color: MUTED, x, w });
       y += 2;
     });
@@ -746,6 +764,136 @@ $('pdf').addEventListener('click', async () => {
   finally { btn.disabled = false; }
 });
 
+/* ---------- export for AI agents: PROMPT.md + revue.json + images, in one .zip ---------- */
+let jszipReady = null;
+const jszipLib = () => jszipReady ||= loadScript('vendor/jszip/jszip.min.js').then(() => window.JSZip);
+const slug = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'plan';
+const TOOL_KEY = { note: 'general', pin: 'repere', rect: 'zone', arrow: 'fleche', draw: 'main_levee' };
+const TOOL_WORD = { repere: 'repère', zone: 'zone', fleche: 'flèche', main_levee: 'dessin à main levée' };
+const r4 = v => +v.toFixed(4), r1 = v => +v.toFixed(1);
+const toBlob = (cv, type = 'image/png', q) => new Promise(r => cv.toBlob(r, type, q));
+// area a remark is about, as a fraction of the page; a point becomes a small square around it
+function zoneOf(m, W, H){
+  if (m.type === 'note') return null;
+  const R = .025 * Math.max(W, H);
+  let x0, y0, x1, y1;
+  if (m.type === 'rect'){ x0 = m.x * W; y0 = m.y * H; x1 = (m.x + m.w) * W; y1 = (m.y + m.h) * H; }
+  else if (m.type === 'draw'){ const xs = m.pts.map(p => p[0] * W), ys = m.pts.map(p => p[1] * H); x0 = Math.min(...xs); x1 = Math.max(...xs); y0 = Math.min(...ys); y1 = Math.max(...ys); }
+  else { const [x, y] = target(m); x0 = x * W - R; x1 = x * W + R; y0 = y * H - R; y1 = y * H + R; }
+  x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1);
+  return { x: x0 / W, y: y0 / H, w: (x1 - x0) / W, h: (y1 - y0) / H };
+}
+// close-up of a zone with some context around it, enlarged so small dimensions stay legible
+function cropZone(cv, z){
+  const W = cv.width, H = cv.height, pad = Math.max(Math.max(z.w * W, z.h * H), .08 * Math.max(W, H));
+  const x0 = Math.max(0, z.x * W - pad), y0 = Math.max(0, z.y * H - pad), x1 = Math.min(W, (z.x + z.w) * W + pad), y1 = Math.min(H, (z.y + z.h) * H + pad);
+  const w = x1 - x0, h = y1 - y0, k = Math.min(3, Math.max(1, 800 / Math.max(w, h)));
+  const out = document.createElement('canvas'); out.width = Math.round(w * k); out.height = Math.round(h * k);
+  const ctx = out.getContext('2d'); ctx.imageSmoothingQuality = 'high'; ctx.drawImage(cv, x0, y0, w, h, 0, 0, out.width, out.height);
+  return out;
+}
+async function buildZip(){
+  const JSZip = await jszipLib(), zip = new JSZip(), used = new Set(), plans = [];
+  const uniq = r => { let k = r, n = 2; while (used.has(k)) k = `${r}_${n++}`; used.add(k); return k; };
+  for (const it of items){
+    const ref = uniq(slug(refOf(it))), mm = it.pageMm || null;
+    const full = await annotated(srcOf(it), it.marks, 2200), W = full.width, H = full.height;
+    const planPath = `plans/${ref}.png`; zip.file(planPath, await toBlob(full));
+    const frac = o => o && Object.fromEntries(Object.entries(o).map(([k, v]) => [k, r4(v)]));
+    const inMm = o => o && mm && { x: r1(o.x * mm.w), y: r1(o.y * mm.h), ...('w' in o ? { w: r1(o.w * mm.w), h: r1(o.h * mm.h) } : {}) };
+    const remarques = []; let n = 0;
+    for (const m of it.marks){
+      const id = m.type === 'note' ? `${ref}-G` : `${ref}-R${++n}`;
+      const z = zoneOf(m, W, H), t = m.type === 'pin' || m.type === 'arrow' ? target(m) : null, point = t && { x: t[0], y: t[1] };
+      let image_zone = null;
+      if (z){
+        // in close-ups a pin becomes a hollow ring and numbers are left out, so nothing hides the spot itself
+        const R = .02 * Math.max(W, H), shown = m.type !== 'pin' ? m : { ...m, type: 'draw',
+          pts: Array.from({ length: 33 }, (_, k) => [m.x + R * Math.cos(k * Math.PI / 16) / W, m.y + R * Math.sin(k * Math.PI / 16) / H]) };
+        image_zone = `zones/${id}.png`; zip.file(image_zone, await toBlob(cropZone(await annotated(srcOf(it), [shown], 2200, false), z)));
+      }
+      const pieces_jointes = m.imgs.map((b, k) => {
+        const ext = ((b.type || '').split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+        const path = `images/${id}_${k + 1}.${ext}`; zip.file(path, b); return path;
+      });
+      remarques.push({ id, gravite: m.sev === 'b' ? 'bloquant' : 'mineur', categorie: m.cat || null, outil: TOOL_KEY[m.type],
+        commentaire: m.text || null, correction_attendue: (m.expected || '').trim() || null,
+        zone: frac(z), point: frac(point), zone_mm: inMm(z), point_mm: inMm(point), image_zone, pieces_jointes });
+    }
+    const ch = it.checks || {};
+    plans.push({ ref, fichier: it.source || it.name.replace(/ · p\.\d+$/, ''), page: it.page || +((it.name.match(/ · p\.(\d+)$/) || [])[1] || 0) || null,
+      decision: it.decision === 'ok' ? 'valide' : 'a_reprendre', format_feuille_mm: mm, image_annotee: planPath,
+      controles: { verifies: CHECKS.filter(c => ch[c]), non_verifies: CHECKS.filter(c => !ch[c]) }, remarques });
+  }
+  const data = { format: 'revue-plans/1', date: new Date().toISOString(),
+    coordonnees: 'Origine au coin haut gauche de la page. zone/point : fraction de la largeur et de la hauteur de la page (0 à 1). zone_mm/point_mm : millimètres sur la feuille (null si le plan ne vient pas d’un PDF). Pour une flèche, le point est la pointe.',
+    plans };
+  zip.file('revue.json', JSON.stringify(data, null, 2) + '\n');
+  zip.file('PROMPT.md', promptMd(data));
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
+}
+function whereText(r){
+  const z = r.zone_mm, f = r.zone, w = TOOL_WORD[r.outil];
+  if (r.point){ const p = r.point_mm; return `${w} visant le point ${p ? `x ${p.x} mm, y ${p.y} mm` : `x ${pct(r.point.x)}, y ${pct(r.point.y)} de la page`}`; }
+  return z ? `${w} couvrant x ${z.x} à ${r1(z.x + z.w)} mm, y ${z.y} à ${r1(z.y + z.h)} mm`
+           : `${w} couvrant x ${pct(f.x)} à ${pct(f.x + f.w)}, y ${pct(f.y)} à ${pct(f.y + f.h)} de la page`;
+}
+function promptMd(d){
+  const ko = d.plans.filter(p => p.decision === 'a_reprendre'), ok = d.plans.filter(p => p.decision === 'valide');
+  const ex = (ko.find(p => p.remarques.length) || { remarques: [{ id: 'REF-R1' }] }).remarques[0].id;
+  const fileOf = p => `${p.fichier}${p.page ? `, page ${p.page}` : ''}`;
+  const L = ['# Corrections à apporter à des plans de fabrication', '',
+    'Tu as produit les plans de fabrication ci-dessous (en PDF). Un relecteur humain les a contrôlés. Corrige ceux qui sont « à reprendre » en suivant ses remarques, puis régénère les PDF corrigés.', '',
+    '## Règles', '',
+    '1. Traite toutes les remarques **bloquantes**. Traite les **mineures** si cela ne crée pas d’autre problème.',
+    '2. Quand une « correction attendue » est indiquée, applique-la exactement.',
+    '3. Ne modifie rien d’autre que ce qui est demandé. Garde la référence de chaque plan ; si le cartouche porte un indice de révision, incrémente-le.',
+    '4. Si une remarque est ambiguë ou impossible à appliquer, ne devine pas : signale-la.',
+    '5. Les contrôles « non vérifiés » n’ont pas été faits par le relecteur : vérifie-les aussi.', '',
+    '## Localiser une remarque', '',
+    '- Les positions partent du **coin haut gauche** de la page, en millimètres sur la feuille quand c’est connu, sinon en % de la largeur et de la hauteur de la page.',
+    '- Pour une flèche, le point indiqué est l’endroit **visé** (la pointe).',
+    '- Si tu as accès aux fichiers joints : `plans/<ref>.png` montre le plan annoté avec ses repères numérotés, `zones/<id>.png` un zoom sur l’endroit de chaque remarque, `images/` les photos et captures du relecteur. Sans les images, les positions suffisent.',
+    '- Les mêmes données, structurées, sont dans `revue.json`.', '',
+    '## Format de ta réponse', '',
+    'Termine par un tableau avec une ligne par remarque :', '',
+    '| id | statut | ce qui a été fait, ou pourquoi ce n’est pas fait |', '|---|---|---|', `| ${ex} | corrigé | … |`, '',
+    'Statuts possibles : `corrigé`, `non corrigé`, `à clarifier`.', '',
+    `## Plans à reprendre (${ko.length})`, ''];
+  if (!ko.length) L.push('Aucun.', '');
+  ko.forEach(p => {
+    const nb = p.remarques.filter(r => r.gravite === 'bloquant').length, nm = p.remarques.length - nb;
+    L.push(`### ${p.ref}`, '', `- Fichier : ${fileOf(p)}` + (p.format_feuille_mm ? ` · feuille de ${p.format_feuille_mm.w} × ${p.format_feuille_mm.h} mm` : ''),
+      `- ${nb} remarque${nb > 1 ? 's' : ''} bloquante${nb > 1 ? 's' : ''}, ${nm} mineure${nm > 1 ? 's' : ''} · plan annoté : \`${p.image_annotee}\``);
+    if (p.controles.non_verifies.length) L.push(`- Contrôles non vérifiés : ${p.controles.non_verifies.join(', ')}`);
+    L.push('');
+    p.remarques.forEach(r => {
+      L.push(`#### ${r.id} · ${r.gravite}${r.categorie ? ' · ' + r.categorie : ''}`, '');
+      L.push(`- Où : ${r.outil === 'general' ? 'remarque générale, sur tout le plan' : whereText(r)}`);
+      L.push(`- Constat : ${r.commentaire || '(pas de commentaire : voir l’image de la zone)'}`);
+      if (r.correction_attendue) L.push(`- Correction attendue : ${r.correction_attendue}`);
+      const files = [r.image_zone, ...r.pieces_jointes].filter(Boolean);
+      if (files.length) L.push(`- Images : ${files.map(f => '`' + f + '`').join(', ')}`);
+      L.push('');
+    });
+  });
+  L.push(`## Plans validés, à ne pas modifier (${ok.length})`, '');
+  ok.forEach(p => L.push(`- ${p.ref} (${fileOf(p)})`));
+  if (!ok.length) L.push('Aucun.');
+  return L.join('\n') + '\n';
+}
+$('zip').addEventListener('click', async () => {
+  const btn = $('zip');
+  try {
+    if (!zipFile){
+      btn.disabled = true; btn.textContent = 'Préparation du .zip…';
+      zipFile = new File([await buildZip()], fileStem() + '.zip', { type: 'application/zip' });
+    }
+    await deliver(zipFile, btn, 'Exporter pour l’IA (.zip)');
+  } catch (e){ console.error(e); zipFile = null; btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
+  finally { btn.disabled = false; }
+});
+
 const cell = t => String(t).replace(/\|/g, '\\|').replace(/\s*\n\s*/g, '<br>');
 function recapMarkdown(list, date){
   const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
@@ -757,11 +905,11 @@ function recapMarkdown(list, date){
   ko.forEach(i => {
     const nb = i.marks.filter(m => m.sev === 'b').length;
     md.push(`### ${i.name}`, '', `**${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}** · ${checksLine(i)}`, '');
-    md.push('| # | Type | Gravité | Catégorie | Position | Commentaire | Images |', '|---|---|---|---|---|---|---|');
+    md.push('| # | Type | Gravité | Catégorie | Position | Commentaire | Correction attendue | Images |', '|---|---|---|---|---|---|---|---|');
     let n = 0;
     i.marks.forEach(m => {
-      const general = m.type === 'note', [x, y] = general ? [] : anchor(m);
-      md.push(`| ${general ? 'G' : ++n} | ${general ? 'Général' : TOOLS[m.type]} | ${SEV[m.sev]} | ${cell(m.cat || '–')} | ${general ? '–' : `x ${pct(x)}, y ${pct(y)}`} | ${cell(m.text || '(sans commentaire)')} | ${m.imgs.length || '–'} |`);
+      const general = m.type === 'note', [x, y] = general ? [] : target(m);
+      md.push(`| ${general ? 'G' : ++n} | ${general ? 'Général' : TOOLS[m.type]} | ${SEV[m.sev]} | ${cell(m.cat || '–')} | ${general ? '–' : `x ${pct(x)}, y ${pct(y)}`} | ${cell(m.text || '(sans commentaire)')} | ${cell((m.expected || '').trim() || '–')} | ${m.imgs.length || '–'} |`);
     });
     md.push('');
   });

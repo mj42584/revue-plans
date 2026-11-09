@@ -26,8 +26,6 @@
 
 Formats acceptés : **PDF** (une carte par page), **DXF** et **images**. Trois plans d'exemple sont chargés au premier lancement pour essayer tout de suite.
 
-Un DXF est dessiné en noir sur blanc depuis l'espace objet : géométrie, blocs, textes, cotations (calques masqués ignorés).
-
 ### 2. Annotez avec précision
 - **Quatre outils** : repère, zone, flèche, main levée.
 - **Zoom jusqu'à 400 %** pour pointer la plus petite cote.
@@ -47,7 +45,6 @@ Puis, au choix :
 | 📄 **PDF** | Le rapport à envoyer : une page par plan, images jointes en annexe |
 | 🤖 **Pack IA** (.zip) | Un agent qui corrige les plans tout seul |
 
-Sur iPhone, les fichiers s'ouvrent dans la feuille de partage (Mail, WhatsApp, Fichiers…).
 
 #### Le pack IA en détail
 - `PROMPT.md` : la consigne prête à donner à n'importe quel agent.

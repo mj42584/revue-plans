@@ -6,6 +6,7 @@ Valider ou renvoyer des plans de fabrication d'un geste, façon swipe.
 - Glisser à gauche : plan à reprendre. On annote le plan avec quatre outils (repère, zone, flèche, main levée). Chaque annotation a son commentaire, une catégorie (cote, tolérance, matière…), une gravité (bloquant ou mineur) et des images jointes (capture d'écran, photo de la pièce). Sur ordinateur, une capture copiée se colle directement (Ctrl+V / ⌘V).
 - Zoom dans l'éditeur (jusqu'à 400 %) pour annoter une petite cote.
 - Contrôles : une check-list à cocher sous chaque plan (cartouche, échelle, tolérances…), modifiable.
+- Dans le récap, chaque plan se rouvre pour modifier ses remarques avant l'export (« Modifier les remarques », ou « Ajouter des remarques » sur un plan validé). Sans remarque, le plan repasse en validé.
 - À la fin : récapitulatif avec vignettes annotées, texte prêt à copier, export Markdown (.md, un tableau des remarques par plan) et export PDF (une page par plan, images jointes en annexe). Sur iPhone, les fichiers s'ouvrent dans la feuille de partage (Mail, WhatsApp, Fichiers…).
 - Export pour l'IA (.zip) : `PROMPT.md` (consigne prête à donner à n'importe quel agent), `revue.json` (données structurées), plans annotés, zoom sur chaque remarque et images jointes. Chaque remarque a un identifiant stable (`REF-R1`), sa gravité, sa catégorie, sa « correction attendue » et sa position en mm sur la feuille (lue dans le PDF).
 

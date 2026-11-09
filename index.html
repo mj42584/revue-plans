@@ -143,6 +143,7 @@ textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(
 .chip.ok{color:var(--ok)} .chip.ko{color:var(--ko)}
 #recap-text{font:13px/1.5 var(--mono)}
 .controls{display:flex;flex-direction:column;gap:10px}
+.item-actions{display:flex;flex-wrap:wrap;gap:8px}
 .ref-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
 .ref-row label{font:700 1.1rem var(--display);text-transform:uppercase;letter-spacing:.04em}
 .ref-row input{flex:1;min-width:160px;width:auto}
@@ -300,7 +301,7 @@ const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onlo
 /* ---------- saved in this browser (IndexedDB: plans and photos can weigh several MB) ---------- */
 const dbp = new Promise((res, rej) => { const r = indexedDB.open('revue-plans', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function idb(mode, fn){ const d = await dbp; return new Promise((res, rej) => { const t = d.transaction('s', mode); const q = fn(t.objectStore('s')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); }
-const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, checks: CHECKS, draft: draft && { idx: cur, marks: draft.marks } }, 'state')).catch(() => {});
+const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, checks: CHECKS, draft: draft && { idx: draft.idx, edit: draft.edit, marks: draft.marks } }, 'state')).catch(() => {});
 let saveT; const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 400); };
 
 /* ---------- PDF support, loaded only when a PDF is added ---------- */
@@ -460,10 +461,12 @@ function decide(d){
 function undo(){ if (!past.length) return; cur = past.pop(); items[cur].decision = null; render(); }
 
 /* ---------- reject: annotations + remarks ---------- */
-function openReview(it, savedMarks){
+// edit: reopening a plan from the recap, which changes its remarks without moving through the stack
+function openReview(it, savedMarks, edit = false){
   const marks = (savedMarks || it.marks).map(m => ({ ...m, imgs: [...m.imgs] }));
   if (!marks.some(m => m.type === 'note')) marks.unshift(newMark('note', {}));
-  draft = { marks }; active = 0;
+  draft = { marks, idx: items.indexOf(it), edit }; active = 0;
+  $('sheet-title').textContent = edit ? 'Modifier les remarques' : 'À reprendre';
   $('sheet-name').textContent = it.name;
   $('pin-img').src = srcOf(it); $('pin-img').alt = 'Plan ' + it.name;
   setTool(tool); drawReview(); drawList();
@@ -472,13 +475,19 @@ function openReview(it, savedMarks){
 function closeReview(sent){
   $('sheet').hidden = true;
   if (sent){
-    const it = items[cur];
-    it.marks = draft.marks.filter(m => m.type !== 'note' || m.text.trim() || m.imgs.length).map(m => ({ ...m, text: m.text.trim() }));
-    it.decision = 'ko'; past.push(cur); cur++;
+    const it = items[draft.idx];
+    it.marks = draft.marks.filter(hasContent).map(m => ({ ...m, text: m.text.trim() }));
+    if (!draft.edit){ it.decision = 'ko'; past.push(cur); cur++; }
+    else it.decision = it.marks.length ? 'ko' : 'ok'; // every remark removed: the plan is validated
   }
   draft = null; render();
 }
-function canSend(){ $('send-ko').disabled = !draft.marks.some(m => m.type !== 'note' || m.text.trim() || m.imgs.length); }
+const hasContent = m => m.type !== 'note' || m.text.trim() || (m.expected || '').trim() || m.imgs.length;
+function canSend(){
+  const any = draft.marks.some(hasContent), btn = $('send-ko');
+  btn.disabled = !any && !draft.edit;
+  btn.textContent = !draft.edit ? 'Envoyer les remarques' : any ? 'Enregistrer' : 'Valider le plan (aucune remarque)';
+}
 function setTool(t){
   tool = t;
   document.querySelectorAll('.tool[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t));
@@ -535,7 +544,7 @@ function drawList(){
     const ex = li.querySelector('.expected');
     ex.value = m.expected || ''; ex.placeholder = 'Correction attendue (facultatif). Ex. : H8, ép. 8 mm';
     ex.setAttribute('aria-label', 'Correction attendue' + (num ? ` ${TOOLS[m.type]} ${num}` : ', remarque générale'));
-    ex.addEventListener('input', () => { m.expected = ex.value; saveSoon(); });
+    ex.addEventListener('input', () => { m.expected = ex.value; canSend(); saveSoon(); });
     li.addEventListener('focusin', () => { active = i; markActive(); });
     li.querySelector('select').addEventListener('change', e => { m.cat = e.target.value; saveSoon(); });
     li.querySelectorAll('.sev button').forEach(b => b.addEventListener('click', () => { m.sev = b.className; drawList(); drawReview(); saveSoon(); }));
@@ -668,6 +677,10 @@ function renderRecap(show){
       ul.appendChild(li);
     });
     if (!ul.children.length) ul.remove();
+    const act = document.createElement('div'); act.className = 'item-actions';
+    act.innerHTML = `<button type="button" class="tool small">${it.decision === 'ko' ? 'Modifier les remarques' : 'Ajouter des remarques'}</button>`;
+    act.querySelector('button').addEventListener('click', () => openReview(it, null, true));
+    f.querySelector('.item-body').appendChild(act);
     const body = f.querySelector('.item-body');
     extraLines(it).forEach(l => { const e = document.createElement('span'); e.className = 'meta'; e.textContent = l.trim(); body.appendChild(e); });
     grid.appendChild(f);
@@ -949,7 +962,8 @@ document.addEventListener('keydown', e => {
   if (!sample) $('hint').hidden = true;
   render();
   // a remark being written when the tab was closed comes back as it was
-  if (st && st.draft && st.draft.idx === cur && items[cur]) openReview(items[cur], st.draft.marks);
+  const d = st && st.draft;
+  if (d && items[d.idx] && (d.edit || d.idx === cur)) openReview(items[d.idx], d.marks, !!d.edit);
 })();
 </script>
 </body>

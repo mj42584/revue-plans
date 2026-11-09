@@ -341,14 +341,19 @@ async function dxfPage(file){
   const parsed = lib.parseString(text);
   // model space only; a dimension is drawn by inserting its pre-computed block (*D…)
   parsed.entities = parsed.entities.filter(e => !e.paperSpace)
-    .map(e => e.type === 'DIMENSION' && e.block ? { ...e, type: 'INSERT', x: 0, y: 0 } : e);
+    .map(e => e.type === 'DIMENSION' && e.block ? { ...e, type: 'INSERT', x: 0, y: 0, rotation: 0 } : e); // the block is already in place: its angle is the measuring direction, not a rotation
   const layers = parsed.tables.layers || {};
   const hidden = name => { const l = layers[name]; return !!l && (l.colorNumber < 0 || (l.flags & 1) === 1); };
   const lines = lib.toPolylines(parsed).polylines.filter(p => !(p.layer && hidden(p.layer.name)) && p.vertices.length > 1);
-  const texts = lib.denormalise(parsed).filter(e => (e.type === 'TEXT' || e.type === 'MTEXT') && !hidden(e.layer)).map(e => {
+  const flat = lib.denormalise(parsed).filter(e => !hidden(e.layer));
+  // filled triangles/quads (dimension arrowheads): the library does not turn them into polylines
+  const solids = flat.filter(e => e.type === 'SOLID' && e.corners).map(e => [0, 1, 3, 2].map(i => e.corners[i]).filter(c => c && isFinite(c.x)).map(c => dxfPoint(c.x, c.y, e.transforms)));
+  const texts = flat.filter(e => e.type === 'TEXT' || e.type === 'MTEXT').map(e => {
     const mt = e.type === 'MTEXT', aligned = !mt && (e.hAlign || e.vAlign) && e.x2 !== undefined;
     const p = dxfPoint(aligned ? e.x2 : e.x, aligned ? e.y2 : e.y, e.transforms);
-    const own = mt ? (e.rotation ?? (e.xAxisX !== undefined ? Math.atan2(e.xAxisY || 0, e.xAxisX) * 180 / Math.PI : 0)) : (e.rotation || 0);
+    // the library stores the MTEXT angle (code 50) as columnHeights
+    const own = !mt ? (e.rotation || 0) : e.xAxisX !== undefined ? Math.atan2(e.xAxisY || 0, e.xAxisX) * 180 / Math.PI
+      : e.rotation ?? (typeof e.columnHeights === 'number' && !e.columnType ? e.columnHeights : 0);
     let h = 'left', v = 'alphabetic';
     if (mt){ const a = (e.attachmentPoint || 1) - 1; h = ['left', 'center', 'right'][a % 3]; v = ['top', 'middle', 'bottom'][Math.floor(a / 3)]; }
     else if (aligned){ h = ({ 1: 'center', 2: 'right', 4: 'center' })[e.hAlign] || 'left'; v = ({ 1: 'bottom', 2: 'middle', 3: 'top' })[e.vAlign] || (e.hAlign === 4 ? 'middle' : 'alphabetic'); }
@@ -359,6 +364,7 @@ async function dxfPage(file){
   const grow = (x, y) => { if (!isFinite(x) || !isFinite(y)) return; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
   lines.forEach(l => l.vertices.forEach(v => grow(v[0], v[1])));
   texts.forEach(t => grow(t.x, t.y));
+  solids.forEach(q => q.forEach(c => grow(c.x, c.y)));
   if (!isFinite(x0)) throw new Error('aucun élément dessinable dans le DXF');
   const m = Math.max(x1 - x0, y1 - y0, 1) * .03;
   x0 -= m; y0 -= m; x1 += m; y1 += m;
@@ -371,6 +377,7 @@ async function dxfPage(file){
   ctx.beginPath();
   lines.forEach(l => l.vertices.forEach((v, i) => i ? ctx.lineTo(X(v[0]), Y(v[1])) : ctx.moveTo(X(v[0]), Y(v[1]))));
   ctx.stroke();
+  solids.forEach(q => { ctx.beginPath(); q.forEach((c, i) => i ? ctx.lineTo(X(c.x), Y(c.y)) : ctx.moveTo(X(c.x), Y(c.y))); ctx.closePath(); ctx.fill(); });
   texts.forEach(t => {
     const px = t.size * k, rows = t.str.split('\n'), lh = px * 1.66;
     ctx.save(); ctx.translate(X(t.x), Y(t.y)); ctx.rotate(-t.rot * Math.PI / 180);

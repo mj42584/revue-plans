@@ -10,21 +10,22 @@
 /* Layout: one-column workbench, drawing sheet as the card, action bar under it, recap below once the stack is empty */
 :root{
   --bg:#eaeef2; --surface:#ffffff; --ink:#18212b; --muted:#5a6878; --line:#cbd3dc;
-  --accent:#1f5fa8; --ok:#1b8049; --ko:#bf3d29; --paper:#ffffff; --scrim:rgba(12,17,24,.62);
+  --accent:#1f5fa8; --ok:#1b8049; --ko:#bf3d29; --warn:#b06d05; --paper:#ffffff; --scrim:rgba(12,17,24,.62);
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10151b; --surface:#19212a; --ink:#e3e8ed; --muted:#93a1b0; --line:#2b3642;
-  --accent:#6ea7e6; --ok:#43bd7b; --ko:#ee6a55; --paper:#f6f7f8; --scrim:rgba(0,0,0,.7); color-scheme:dark}}
+  --accent:#6ea7e6; --ok:#43bd7b; --ko:#ee6a55; --warn:#e9a23b; --paper:#f6f7f8; --scrim:rgba(0,0,0,.7); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10151b; --surface:#19212a; --ink:#e3e8ed; --muted:#93a1b0; --line:#2b3642;
-  --accent:#6ea7e6; --ok:#43bd7b; --ko:#ee6a55; --paper:#f6f7f8; --scrim:rgba(0,0,0,.7); color-scheme:dark}
+  --accent:#6ea7e6; --ok:#43bd7b; --ko:#ee6a55; --warn:#e9a23b; --paper:#f6f7f8; --scrim:rgba(0,0,0,.7); color-scheme:dark}
 
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(20px + env(safe-area-inset-top,0px)) calc(40px + env(safe-area-inset-bottom,0px))}
 .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 .mono{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
 h1,h2{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin:0;line-height:1.1;text-wrap:balance}
@@ -40,7 +41,7 @@ h2{font-size:1.4rem}
 .btn.ghost{background:transparent;color:var(--accent)}
 .btn.danger{background:var(--ko);border-color:var(--ko)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible,label.btn:focus-within,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 .deck{position:relative;width:100%;aspect-ratio:1188/930;max-width:100%}
 .card{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);
@@ -72,26 +73,55 @@ button:focus-visible,label.btn:focus-within,textarea:focus-visible{outline:3px s
 
 .overlay{position:fixed;inset:0;z-index:20;background:var(--scrim);display:flex;align-items:center;justify-content:center;
   padding:calc(12px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
-.panel{background:var(--surface);width:100%;max-width:1000px;max-height:100%;overflow:auto;border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--surface);width:100%;max-width:1100px;max-height:100%;overflow:auto;border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+#sheet .panel{height:100%;box-sizing:border-box} /* fixed height: adding a remark must not move the plan under the finger */
 .panel-head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline}
 .panel-head h2{color:var(--ko)}
 .panel-head span{color:var(--muted);overflow-wrap:anywhere;min-width:0}
-.review-body{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
-@media (max-width:700px){.review-body{grid-template-columns:minmax(0,1fr)}}
-.pinboard{position:relative;background:var(--paper);border:1px solid var(--line);cursor:crosshair;line-height:0}
-.pinboard img{width:100%;height:auto;display:block}
-.pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:2px solid #fff;background:#bf3d29;
+.review-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.review-body{grid-template-columns:minmax(0,1fr)}}
+.board-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px}
+.tool{font:600 14px var(--body);padding:7px 11px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tool svg{width:16px;height:16px;flex:none}
+.tool[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--surface)}
+.tool.small{font-size:13px;padding:5px 9px}
+
+.pinboard{position:relative;background:var(--paper);border:1px solid var(--line);line-height:0}
+.pinboard img{width:100%;height:auto;display:block;user-select:none;-webkit-user-select:none}
+#pinboard{cursor:crosshair}
+#pinboard.drawing{touch-action:none}
+.ink{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pin{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;border:2px solid #fff;
   color:#fff;font:600 13px var(--mono);display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4);line-height:1}
-.notes{display:flex;flex-direction:column;gap:8px;min-width:0}
-.notes label{font-weight:600;font-size:14px}
+.pin.tag{width:22px;height:22px;margin:-11px 0 0 -11px;font-size:11px}
+.item .pin{width:20px;height:20px;margin:-10px 0 0 -10px;font-size:10px;cursor:default}
+
+.marks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mark{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.mark.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.mark-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.mark-head .kind{font-weight:600;font-size:14px;margin-right:auto}
+.badge{min-width:24px;height:24px;border-radius:12px;color:#fff;font:600 12px var(--mono);display:inline-grid;place-items:center;padding:0 6px;flex:none;box-sizing:border-box}
+select{font:14px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 6px;max-width:100%}
+.sev{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.sev button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 9px;cursor:pointer}
+.sev button.b[aria-pressed="true"]{background:var(--ko);color:#fff}
+.sev button.m[aria-pressed="true"]{background:var(--warn);color:#fff}
 textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box;resize:vertical}
-#pin-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-#pin-list li{display:flex;flex-direction:column;gap:4px}
-.pin-row{display:flex;justify-content:space-between;align-items:center}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.thumbs:empty{display:none}
+.thumb{position:relative;width:64px;height:64px;flex:none}
+.thumb .open{width:100%;height:100%;padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--paper);cursor:zoom-in}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:var(--surface);
+  font:600 14px/1 var(--body);cursor:pointer;display:grid;place-items:center;padding:0}
+.item .thumb{width:44px;height:44px}
 .link{background:none;border:0;color:var(--ko);font:14px var(--body);cursor:pointer;padding:2px 4px}
 .panel-foot{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px}
 
-#viewer{flex-direction:column;align-items:stretch;gap:10px}
+#viewer{z-index:30;flex-direction:column;align-items:stretch;gap:10px}
 .viewer-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#fff}
 .viewer-bar span{min-width:0;overflow-wrap:anywhere}
 .viewer-scroll{flex:1;min-height:0;overflow:auto;background:var(--paper);border-radius:6px}
@@ -100,24 +130,27 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 
 #recap{display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--line);padding-top:18px}
 .recap-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 .item{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-.item .pinboard{cursor:default;border:0;border-bottom:1px solid var(--line)}
-.item .pin{width:22px;height:22px;margin:-11px 0 0 -11px;font-size:11px;cursor:default}
-.item-body{padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
-.item-body ul{margin:0;padding-left:18px;color:var(--muted)}
+.item .pinboard{border:0;border-bottom:1px solid var(--line)}
+.item-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.rmarks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rmarks li{display:flex;gap:8px;align-items:flex-start}
+.rmarks li > div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rmarks p{margin:0;overflow-wrap:anywhere}
+.meta{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .chip{align-self:flex-start;font:600 12px var(--body);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;border:1.5px solid currentColor}
 .chip.ok{color:var(--ok)} .chip.ko{color:var(--ko)}
 #recap-text{font:13px/1.5 var(--mono)}
 @media (prefers-reduced-motion:reduce){.card,.round{transition:none!important}.round:hover:not(:disabled){transform:none}}
 </style>
-
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div><h1>Revue de plans</h1><p id="progress" class="mono"></p></div>
-    <label class="btn ghost" for="files">Ajouter des plans<input id="files" type="file" accept="image/*,application/pdf" multiple hidden></label>
+    <button id="add-plans" class="btn ghost" type="button">Ajouter des plans</button>
+    <input id="files" type="file" accept="image/*,application/pdf" multiple hidden>
   </header>
   <p id="hint" class="hint">Trois plans d'exemple sont chargés. Ajoutez vos plans (PDF ou images) pour lancer votre propre revue. Glissez à droite pour valider, à gauche pour demander une reprise.</p>
 
@@ -136,20 +169,27 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
     <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn">Copier le récap</button></div></div>
     <div id="recap-grid" class="grid"></div>
     <label for="recap-text" class="hint">Texte à transmettre au bureau d'études :</label>
-    <textarea id="recap-text" readonly rows="9"></textarea>
+    <textarea id="recap-text" readonly rows="10"></textarea>
   </section>
 </div>
 
 <div id="sheet" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title">
   <div class="panel">
     <div class="panel-head"><h2 id="sheet-title">À reprendre</h2><span id="sheet-name" class="mono"></span></div>
-    <p class="hint">Touchez le plan pour placer un repère à l'endroit à corriger, puis décrivez la modification.</p>
     <div class="review-body">
-      <div class="pinboard" id="pinboard"><img id="pin-img" alt=""></div>
-      <div class="notes">
-        <label for="note">Remarque générale</label>
-        <textarea id="note" rows="3" placeholder="Ex. : passer l'épaisseur à 8 mm"></textarea>
-        <ol id="pin-list"></ol>
+      <div class="board-col">
+        <div class="toolbar" role="group" aria-label="Outil d'annotation">
+          <button type="button" class="tool" data-tool="pin"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="currentColor"/></svg>Repère</button>
+          <button type="button" class="tool" data-tool="rect"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Zone</button>
+          <button type="button" class="tool" data-tool="arrow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13L12 4M6.5 4H12v5.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Flèche</button>
+          <button type="button" class="tool" data-tool="draw"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 11c2-6 4 1 6-3s4 1 6-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Main levée</button>
+        </div>
+        <p id="tool-hint" class="hint"></p>
+        <div class="pinboard" id="pinboard"><img id="pin-img" alt="" draggable="false"></div>
+      </div>
+      <div class="board-col">
+        <ol id="marks" class="marks"></ol>
+        <p class="hint" style="font-size:13px">Astuce : sur ordinateur, collez une capture d'écran (Ctrl+V ou ⌘V) pour l'ajouter à la remarque sélectionnée.</p>
       </div>
     </div>
     <div class="panel-foot">
@@ -159,14 +199,21 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
   </div>
 </div>
 
-<div id="viewer" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Plan agrandi">
+<div id="viewer" class="overlay" hidden role="dialog" aria-modal="true" aria-label="Image agrandie">
   <div class="viewer-bar"><span id="viewer-name" class="mono"></span><button id="viewer-close" class="btn">Fermer</button></div>
   <div class="viewer-scroll"><img id="viewer-img" alt=""></div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-let items = [], cur = 0, past = [], sample = true, draft = null;
+let items = [], cur = 0, past = [], sample = true, draft = null, tool = 'pin', active = 0;
+
+const CATS = ['Cote', 'Tolérance', 'Matière', 'État de surface', 'Usinage', 'Soudure', 'Cartouche', 'Autre'];
+const SEV = { b: 'Bloquant', m: 'Mineur' };
+const TOOLS = { pin: 'Repère', rect: 'Zone', arrow: 'Flèche', draw: 'Main levée' };
+const TOOL_HINT = { pin: 'Touchez le plan pour poser un repère.', rect: 'Glissez sur le plan pour encadrer une zone.',
+  arrow: "Glissez depuis un endroit libre jusqu'à l'élément visé.", draw: 'Dessinez sur le plan au doigt ou à la souris.' };
+const COLOR = { b: '#d1352b', m: '#d98a00' }; // drawn on white paper, so fixed in both themes
 
 /* ---------- sample drawings (A3-ish sheets drawn as SVG) ---------- */
 const B = '#1f5fa8';
@@ -175,7 +222,7 @@ const vdim = (x,y1,y2,t) => { const m=(y1+y2)/2; return `<g stroke="${B}" stroke
 const part = s => `<g fill="none" stroke="#111" stroke-width="3">${s}</g>`;
 const axis = (x1,y1,x2,y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#111" stroke-width="1" stroke-dasharray="24 6 4 6"/>`;
 function sheet(title, ref, mat, body){
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1188 840" font-family="Arial, Helvetica, sans-serif"><rect width="1188" height="840" fill="#fff"/><rect x="20" y="20" width="1148" height="800" fill="none" stroke="#111" stroke-width="2"/>${body}<g stroke="#111" stroke-width="1.5" fill="none"><rect x="768" y="700" width="400" height="120"/><line x1="768" y1="742" x2="1168" y2="742"/><line x1="768" y1="781" x2="1168" y2="781"/><line x1="1000" y1="742" x2="1000" y2="820"/></g><g fill="#111" font-size="18"><text x="780" y="730" font-size="24" font-weight="bold">${title}</text><text x="780" y="768">Réf. ${ref}</text><text x="1012" y="768">Indice A</text><text x="780" y="807">Échelle 1:2</text><text x="1012" y="807">${mat}</text></g></svg>`);
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1188" height="840" viewBox="0 0 1188 840" font-family="Arial, Helvetica, sans-serif"><rect width="1188" height="840" fill="#fff"/><rect x="20" y="20" width="1148" height="800" fill="none" stroke="#111" stroke-width="2"/>${body}<g stroke="#111" stroke-width="1.5" fill="none"><rect x="768" y="700" width="400" height="120"/><line x1="768" y1="742" x2="1168" y2="742"/><line x1="768" y1="781" x2="1168" y2="781"/><line x1="1000" y1="742" x2="1000" y2="820"/></g><g fill="#111" font-size="18"><text x="780" y="730" font-size="24" font-weight="bold">${title}</text><text x="780" y="768">Réf. ${ref}</text><text x="1012" y="768">Indice A</text><text x="780" y="807">Échelle 1:2</text><text x="1012" y="807">${mat}</text></g></svg>`);
 }
 const SAMPLES = [
   { name: 'Platine support moteur (exemple)', src: sheet('PLATINE SUPPORT MOTEUR','PL-2041','S235 ép. 6',
@@ -193,6 +240,26 @@ const SAMPLES = [
       + vdim(170,230,530,'Ø40') + hdim(640,780,195,'18') + vdim(830,320,440,'Ø16')
       + '<text x="420" y="300" font-size="22" fill="#111">Ra 1,6</text>') },
 ];
+
+/* ---------- data model ---------- */
+const urls = new WeakMap();
+const urlOf = b => { let u = urls.get(b); if (!u) urls.set(b, u = URL.createObjectURL(b)); return u; };
+const srcOf = it => it.src || urlOf(it.blob);
+const mk = o => ({ ...o, decision: null, marks: [] });
+const newMark = (type, geo) => ({ type, ...geo, text: '', cat: '', sev: 'b', imgs: [] });
+// reviews saved by the first version used { note, pins }
+const migrate = it => it.marks ? it : { ...it, note: undefined, pins: undefined, marks: [
+  ...(it.note ? [{ ...newMark('note', {}), text: it.note }] : []),
+  ...(it.pins || []).map(p => ({ ...newMark('pin', { x: p.x, y: p.y }), text: p.text })) ] };
+const anchor = m => m.type === 'arrow' ? [m.x1, m.y1] : m.type === 'draw' ? m.pts[0] : [m.x, m.y];
+const pct = v => Math.round(v * 100) + ' %';
+const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+
+/* ---------- saved in this browser (IndexedDB: plans and photos can weigh several MB) ---------- */
+const dbp = new Promise((res, rej) => { const r = indexedDB.open('revue-plans', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function idb(mode, fn){ const d = await dbp; return new Promise((res, rej) => { const t = d.transaction('s', mode); const q = fn(t.objectStore('s')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); }
+const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, draft: draft && { idx: cur, marks: draft.marks } }, 'state')).catch(() => {});
+let saveT; const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 400); };
 
 /* ---------- PDF support, loaded only when a PDF is added ---------- */
 let pdfReady = null;
@@ -216,15 +283,8 @@ async function pdfPages(file){
   }
   return out;
 }
-const mk = o => ({ ...o, decision: null, pins: [], note: '' });
-const srcOf = it => it.src || (it.src = URL.createObjectURL(it.blob));
 
-/* ---------- saved in this browser (IndexedDB: plans can weigh several MB) ---------- */
-const dbp = new Promise((res, rej) => { const r = indexedDB.open('revue-plans', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-async function idb(mode, fn){ const d = await dbp; return new Promise((res, rej) => { const t = d.transaction('s', mode); const q = fn(t.objectStore('s')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); }
-// object URLs die with the page, so blob-backed items are stored without their src
-const save = () => idb('readwrite', s => s.put({ items: items.map(it => it.blob ? { ...it, src: undefined } : it), cur, past, sample }, 'state')).catch(() => {});
-
+$('add-plans').addEventListener('click', () => $('files').click());
 $('files').addEventListener('change', async e => {
   const files = [...e.target.files]; e.target.value = '';
   if (!files.length) return;
@@ -243,6 +303,44 @@ $('files').addEventListener('change', async e => {
   render();
 });
 
+/* ---------- drawing marks over a plan ---------- */
+function svgMarks(marks, W, H){
+  const s = Math.max(W, H) / 300, X = v => (v * W).toFixed(1), Y = v => (v * H).toFixed(1);
+  const out = marks.map(m => {
+    const c = COLOR[m.sev];
+    if (m.type === 'rect') return `<rect x="${X(m.x)}" y="${Y(m.y)}" width="${X(m.w)}" height="${Y(m.h)}" fill="${c}" fill-opacity=".08" stroke="${c}" stroke-width="${s}"/>`;
+    if (m.type === 'draw') return `<polyline points="${m.pts.map(p => X(p[0]) + ',' + Y(p[1])).join(' ')}" fill="none" stroke="${c}" stroke-width="${s}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (m.type === 'arrow'){
+      const x1 = m.x1 * W, y1 = m.y1 * H, x2 = m.x2 * W, y2 = m.y2 * H, a = Math.atan2(y2 - y1, x2 - x1), L = s * 6;
+      const head = [[x2, y2], [x2 - L * Math.cos(a - .4), y2 - L * Math.sin(a - .4)], [x2 - L * Math.cos(a + .4), y2 - L * Math.sin(a + .4)]];
+      return `<line x1="${x1}" y1="${y1}" x2="${x2 - Math.cos(a) * L * .7}" y2="${y2 - Math.sin(a) * L * .7}" stroke="${c}" stroke-width="${s}" stroke-linecap="round"/><polygon points="${head.map(p => p.join(',')).join(' ')}" fill="${c}"/>`;
+    }
+    return '';
+  }).join('');
+  return `<svg class="ink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+}
+function drawOverlay(board, marks, onLabel){
+  const img = board.querySelector('img');
+  const paint = () => {
+    board.querySelectorAll('.ink,.pin').forEach(e => e.remove());
+    board.insertAdjacentHTML('beforeend', svgMarks(marks, img.naturalWidth || 1188, img.naturalHeight || 840));
+    let n = 0;
+    marks.forEach((m, i) => {
+      if (m.type === 'note') return;
+      const [x, y] = anchor(m), el = document.createElement(onLabel ? 'button' : 'span');
+      el.className = 'pin' + (m.type === 'pin' ? '' : ' tag'); el.textContent = ++n;
+      el.style.left = x * 100 + '%'; el.style.top = y * 100 + '%'; el.style.background = COLOR[m.sev];
+      if (onLabel){
+        el.type = 'button'; el.setAttribute('aria-label', `${TOOLS[m.type]} ${n}`);
+        el.addEventListener('pointerdown', e => e.stopPropagation());
+        el.addEventListener('click', e => { e.stopPropagation(); onLabel(i); });
+      }
+      board.appendChild(el);
+    });
+  };
+  if (img.complete && img.naturalWidth) paint(); else img.addEventListener('load', paint, { once: true });
+}
+
 /* ---------- deck ---------- */
 function render(){
   const deck = $('deck'); deck.innerHTML = '';
@@ -252,7 +350,7 @@ function render(){
   $('undo').disabled = !past.length;
   if (done){
     const ok = items.filter(i => i.decision === 'ok').length;
-    deck.innerHTML = n ? `<div class="done"><div><h2>Revue terminée</h2><p>${ok} validé${ok > 1 ? 's' : ''}, ${n - ok} à reprendre.</p></div></div>`
+    deck.innerHTML = n ? `<div class="done"><div><h2>Revue terminée</h2><p>${plural(ok, 'validé')}, ${n - ok} à reprendre.</p></div></div>`
                        : `<div class="done"><div><h2>Aucun plan</h2><p>Ajoutez des PDF ou des images.</p></div></div>`;
   } else {
     if (items[cur + 1]) deck.appendChild(cardEl(cur + 1, false));
@@ -279,7 +377,7 @@ function bindSwipe(c){
   const end = () => {
     if (x0 === null) return; x0 = null; c.style.transition = '';
     if (dx > T) decide('ok'); else if (dx < -T) decide('ko');
-    else { const tap = Math.abs(dx) < 6; dx = 0; paint(); c.style.transform = ''; if (tap) openViewer(items[cur]); }
+    else { const tap = Math.abs(dx) < 6; dx = 0; paint(); c.style.transform = ''; if (tap) viewPlan(); }
   };
   c.addEventListener('pointerup', end); c.addEventListener('pointercancel', end);
 }
@@ -295,66 +393,144 @@ function decide(d){
 }
 function undo(){ if (!past.length) return; cur = past.pop(); items[cur].decision = null; render(); }
 
-/* ---------- reject: pins + comments ---------- */
-function openReview(it){
-  draft = { pins: it.pins.map(p => ({ ...p })), note: it.note };
+/* ---------- reject: annotations + remarks ---------- */
+function openReview(it, savedMarks){
+  const marks = (savedMarks || it.marks).map(m => ({ ...m, imgs: [...m.imgs] }));
+  if (!marks.some(m => m.type === 'note')) marks.unshift(newMark('note', {}));
+  draft = { marks }; active = 0;
   $('sheet-name').textContent = it.name;
   $('pin-img').src = srcOf(it); $('pin-img').alt = 'Plan ' + it.name;
-  $('note').value = draft.note;
-  drawPins(); $('sheet').hidden = false; $('note').focus();
+  setTool(tool); drawReview(); drawList();
+  $('sheet').hidden = false; save();
 }
 function closeReview(sent){
   $('sheet').hidden = true;
   if (sent){
     const it = items[cur];
-    it.note = draft.note.trim(); it.pins = draft.pins.filter(p => p.text.trim());
+    it.marks = draft.marks.filter(m => m.type !== 'note' || m.text.trim() || m.imgs.length).map(m => ({ ...m, text: m.text.trim() }));
     it.decision = 'ko'; past.push(cur); cur++;
   }
   draft = null; render();
 }
-function canSend(){ $('send-ko').disabled = !(draft.note.trim() || draft.pins.some(p => p.text.trim())); }
-function drawPins(){
-  const board = $('pinboard'), list = $('pin-list');
-  board.querySelectorAll('.pin').forEach(p => p.remove()); list.innerHTML = '';
-  draft.pins.forEach((p, k) => {
-    const b = document.createElement('button');
-    b.className = 'pin'; b.textContent = k + 1; b.style.left = p.x * 100 + '%'; b.style.top = p.y * 100 + '%';
-    b.setAttribute('aria-label', 'Repère ' + (k + 1));
-    b.addEventListener('click', e => { e.stopPropagation(); $('pin-' + k).focus(); });
-    board.appendChild(b);
-    const li = document.createElement('li');
-    li.innerHTML = `<div class="pin-row"><label for="pin-${k}">Repère ${k + 1}</label><button class="link" type="button">Supprimer</button></div><textarea id="pin-${k}" rows="2" placeholder="Ex. : cote 205 à corriger en 210"></textarea>`;
-    const ta = li.querySelector('textarea'); ta.value = p.text;
-    ta.addEventListener('input', () => { p.text = ta.value; canSend(); });
-    li.querySelector('.link').addEventListener('click', () => { draft.pins.splice(k, 1); drawPins(); });
+function canSend(){ $('send-ko').disabled = !draft.marks.some(m => m.type !== 'note' || m.text.trim() || m.imgs.length); }
+function setTool(t){
+  tool = t;
+  document.querySelectorAll('.tool[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t));
+  $('pinboard').classList.toggle('drawing', t !== 'pin');
+  $('tool-hint').textContent = TOOL_HINT[t];
+}
+document.querySelectorAll('.tool[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+const drawReview = preview => drawOverlay($('pinboard'), preview ? [...draft.marks, preview] : draft.marks, focusMark);
+function focusMark(i){ active = i; markActive(); const ta = $('m-' + i); if (ta){ ta.focus(); ta.scrollIntoView({ block: 'nearest' }); } }
+const markActive = () => document.querySelectorAll('#marks .mark').forEach((li, i) => li.classList.toggle('active', i === active));
+
+function thumb(blob, onRemove){
+  const d = document.createElement('div'); d.className = 'thumb';
+  d.innerHTML = `<button type="button" class="open" aria-label="Agrandir l’image"><img alt=""></button>${onRemove ? '<button type="button" class="x" aria-label="Retirer l’image">×</button>' : ''}`;
+  d.querySelector('img').src = urlOf(blob);
+  d.querySelector('.open').addEventListener('click', () => openViewer(urlOf(blob), 'Image jointe'));
+  if (onRemove) d.querySelector('.x').addEventListener('click', onRemove);
+  return d;
+}
+function addImages(m, files){
+  const imgs = [...files].filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+  m.imgs.push(...imgs); drawList(); saveSoon();
+}
+function drawList(){
+  const list = $('marks'); list.innerHTML = ''; let n = 0;
+  draft.marks.forEach((m, i) => {
+    const num = m.type === 'note' ? 0 : ++n;
+    const li = document.createElement('li'); li.className = 'mark' + (i === active ? ' active' : '');
+    li.innerHTML = `<div class="mark-head">${num ? `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span>` : ''}<span class="kind">${num ? TOOLS[m.type] : 'Remarque générale'}</span>
+      <select aria-label="Catégorie"><option value="">Catégorie</option>${CATS.map(c => `<option${c === m.cat ? ' selected' : ''}>${c}</option>`).join('')}</select>
+      <span class="sev" role="group" aria-label="Gravité"><button type="button" class="b" aria-pressed="${m.sev === 'b'}">Bloquant</button><button type="button" class="m" aria-pressed="${m.sev === 'm'}">Mineur</button></span>
+      ${num ? '<button type="button" class="link del">Supprimer</button>' : ''}</div>
+      <textarea id="m-${i}" rows="2"></textarea>
+      <div class="thumbs"></div>
+      <div><button type="button" class="tool small add-img">+ Image</button><input type="file" accept="image/*" multiple hidden></div>`;
+    const ta = li.querySelector('textarea');
+    ta.value = m.text;
+    ta.placeholder = num ? 'Ex. : cote 205 à corriger en 210' : 'Ex. : passer l’épaisseur à 8 mm sur toute la pièce';
+    ta.setAttribute('aria-label', num ? `Commentaire ${TOOLS[m.type]} ${num}` : 'Remarque générale');
+    ta.addEventListener('input', () => { m.text = ta.value; canSend(); saveSoon(); });
+    li.addEventListener('focusin', () => { active = i; markActive(); });
+    li.querySelector('select').addEventListener('change', e => { m.cat = e.target.value; saveSoon(); });
+    li.querySelectorAll('.sev button').forEach(b => b.addEventListener('click', () => { m.sev = b.className; drawList(); drawReview(); saveSoon(); }));
+    li.querySelector('.del')?.addEventListener('click', () => { draft.marks.splice(i, 1); active = 0; drawList(); drawReview(); saveSoon(); });
+    const th = li.querySelector('.thumbs');
+    m.imgs.forEach((b, k) => th.appendChild(thumb(b, () => { m.imgs.splice(k, 1); drawList(); saveSoon(); })));
+    const input = li.querySelector('input[type=file]');
+    li.querySelector('.add-img').addEventListener('click', () => { active = i; input.click(); });
+    input.addEventListener('change', () => { addImages(m, input.files); input.value = ''; });
     list.appendChild(li);
   });
   canSend();
 }
-$('pinboard').addEventListener('click', e => {
-  const r = $('pin-img').getBoundingClientRect();
-  const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-  if (x < 0 || x > 1 || y < 0 || y > 1) return;
-  draft.pins.push({ x, y, text: '' }); drawPins();
-  $('pin-' + (draft.pins.length - 1)).focus();
+
+/* pointer drawing on the plan, in coordinates relative to the image (0..1) */
+let drag = null;
+const norm = e => { const r = $('pin-img').getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
+function markFrom(d){
+  const pts = d.pts, [x0, y0] = pts[0], [x1, y1] = pts[pts.length - 1];
+  if (tool === 'pin') return newMark('pin', { x: x0, y: y0 });
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  if (Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) < .015) return null; // a tap, not a drag
+  if (tool === 'rect') return newMark('rect', { x: Math.min(x0, x1), y: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) });
+  if (tool === 'arrow') return newMark('arrow', { x1: x0, y1: y0, x2: x1, y2: y1 });
+  return newMark('draw', { pts: pts.map(p => p.map(v => +v.toFixed(4))) });
+}
+const board = $('pinboard');
+board.addEventListener('pointerdown', e => {
+  if (!draft || e.button > 0) return;
+  drag = { pts: [norm(e)] };
+  if (tool !== 'pin'){ board.setPointerCapture(e.pointerId); e.preventDefault(); }
 });
-$('note').addEventListener('input', e => { draft.note = e.target.value; canSend(); });
+board.addEventListener('pointermove', e => {
+  if (!drag || tool === 'pin') return;
+  drag.pts.push(norm(e));
+  const m = markFrom(drag); drawReview(m || undefined);
+});
+board.addEventListener('pointerup', () => {
+  if (!drag) return;
+  const m = markFrom(drag); drag = null;
+  if (!m){ drawReview(); return; }
+  draft.marks.push(m); active = draft.marks.length - 1;
+  drawReview(); drawList(); saveSoon();
+  $('m-' + active).focus();
+});
+board.addEventListener('pointercancel', () => { drag = null; if (draft) drawReview(); });
+
+document.addEventListener('paste', e => {
+  if (!draft || !draft.marks[active]) return;
+  const files = [...(e.clipboardData?.files || [])];
+  if (!files.some(f => f.type.startsWith('image/'))) return;
+  e.preventDefault(); addImages(draft.marks[active], files);
+});
 $('send-ko').addEventListener('click', () => closeReview(true));
 $('cancel-ko').addEventListener('click', () => closeReview(false));
 
 /* ---------- viewer ---------- */
-function openViewer(it){ if (!it) return; $('viewer-img').src = srcOf(it); $('viewer-img').alt = 'Plan ' + it.name; $('viewer-img').classList.remove('big'); $('viewer-name').textContent = it.name; $('viewer').hidden = false; $('viewer-close').focus(); }
+function openViewer(src, name){ $('viewer-img').src = src; $('viewer-img').alt = name; $('viewer-img').classList.remove('big'); $('viewer-name').textContent = name; $('viewer').hidden = false; $('viewer-close').focus(); }
+const viewPlan = () => items[cur] && openViewer(srcOf(items[cur]), items[cur].name);
 $('viewer-img').addEventListener('click', e => e.target.classList.toggle('big'));
 $('viewer-close').addEventListener('click', () => { $('viewer').hidden = true; });
 
 /* ---------- recap ---------- */
+function markLine(m, n){
+  const where = m.type === 'note' ? 'Général' : `${n}. ${TOOLS[m.type]} (x ${pct(anchor(m)[0])}, y ${pct(anchor(m)[1])})`;
+  const tags = [SEV[m.sev], m.cat].filter(Boolean).join(' · ');
+  const imgs = m.imgs.length ? ` (${plural(m.imgs.length, 'image')} ${m.imgs.length > 1 ? 'jointes' : 'jointe'})` : '';
+  return `  • ${where} [${tags}] : ${m.text || '(sans commentaire)'}${imgs}`;
+}
 function recapText(list, date){
   const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
   const lines = [`Revue de plans du ${date}`, '', `Validés (${ok.length})`, ...ok.map(i => `- ${i.name}`), '', `À reprendre (${ko.length})`];
   ko.forEach(i => {
-    lines.push(`- ${i.name}`);
-    if (i.note) lines.push(`  • Général : ${i.note}`);
-    i.pins.forEach((p, k) => lines.push(`  • Repère ${k + 1} (x ${Math.round(p.x * 100)} %, y ${Math.round(p.y * 100)} %) : ${p.text.trim()}`));
+    const nb = i.marks.filter(m => m.sev === 'b').length;
+    lines.push(`- ${i.name} : ${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}`);
+    let n = 0;
+    i.marks.forEach(m => lines.push(markLine(m, m.type === 'note' ? 0 : ++n)));
   });
   return lines.join('\n');
 }
@@ -362,17 +538,21 @@ function renderRecap(show){
   $('recap').hidden = !show; if (!show) return;
   const grid = $('recap-grid'); grid.innerHTML = '';
   items.forEach(it => {
+    const nb = it.marks.filter(m => m.sev === 'b').length;
     const f = document.createElement('article'); f.className = 'item';
-    f.innerHTML = `<div class="pinboard"><img></div><div class="item-body"><span class="chip ${it.decision}">${it.decision === 'ok' ? 'Validé' : 'À reprendre'}</span><strong></strong><ul></ul></div>`;
+    f.innerHTML = `<div class="pinboard"><img></div><div class="item-body"><span class="chip ${it.decision}">${it.decision === 'ok' ? 'Validé' : 'À reprendre' + (nb ? ` · ${plural(nb, 'bloquant')}` : '')}</span><strong></strong><ul class="rmarks"></ul></div>`;
     const img = f.querySelector('img'); img.src = srcOf(it); img.alt = 'Plan ' + it.name;
     f.querySelector('strong').textContent = it.name;
-    const ul = f.querySelector('ul');
-    const add = t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); };
-    if (it.note) add(it.note);
-    it.pins.forEach((p, k) => {
-      add(`${k + 1}. ${p.text.trim()}`);
-      const b = document.createElement('span'); b.className = 'pin'; b.textContent = k + 1; b.style.left = p.x * 100 + '%'; b.style.top = p.y * 100 + '%';
-      f.querySelector('.pinboard').appendChild(b);
+    drawOverlay(f.querySelector('.pinboard'), it.marks, null);
+    const ul = f.querySelector('ul'); let n = 0;
+    it.marks.forEach(m => {
+      const num = m.type === 'note' ? 'G' : ++n;
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span><div><span class="meta"></span><p></p><div class="thumbs"></div></div>`;
+      li.querySelector('.meta').textContent = [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
+      li.querySelector('p').textContent = m.text || '(sans commentaire)';
+      m.imgs.forEach(b => li.querySelector('.thumbs').appendChild(thumb(b, null)));
+      ul.appendChild(li);
     });
     if (!ul.children.length) ul.remove();
     grid.appendChild(f);
@@ -384,31 +564,31 @@ $('copy').addEventListener('click', () => {
   const done = () => { btn.textContent = 'Copié'; setTimeout(() => btn.textContent = 'Copier le récap', 1500); };
   navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); btn.textContent = 'Sélectionné, faites Ctrl+C'; });
 });
+$('reset').addEventListener('click', () => { items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render(); });
 
 /* ---------- controls ---------- */
 $('yes').addEventListener('click', () => decide('ok'));
 $('no').addEventListener('click', () => decide('ko'));
-$('zoom').addEventListener('click', () => openViewer(items[cur]));
+$('zoom').addEventListener('click', viewPlan);
 $('undo').addEventListener('click', undo);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){ if (!$('viewer').hidden) $('viewer').hidden = true; else if (!$('sheet').hidden) closeReview(false); return; }
-  if (!$('sheet').hidden || !$('viewer').hidden || /TEXTAREA|INPUT/.test(e.target.tagName)) return;
+  if (!$('sheet').hidden || !$('viewer').hidden || /TEXTAREA|INPUT|SELECT/.test(e.target.tagName)) return;
   if (e.key === 'ArrowRight') decide('ok');
   else if (e.key === 'ArrowLeft') decide('ko');
-  else if (e.key === ' ' && e.target.tagName !== 'BUTTON'){ e.preventDefault(); openViewer(items[cur]); }
+  else if (e.key === ' ' && e.target.tagName !== 'BUTTON'){ e.preventDefault(); viewPlan(); }
   else if (e.key === 'Backspace') undo();
 });
 
-$('reset').addEventListener('click', () => {
-  items.forEach(it => it.blob && it.src && URL.revokeObjectURL(it.src));
-  items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render();
-});
-
 (async () => {
-  try { const st = await idb('readonly', s => s.get('state')); if (st && st.items.length) ({ items, cur, past, sample } = st); } catch {}
-  if (!items.length){ items = SAMPLES.map(mk); sample = true; cur = 0; past = []; }
+  let st = null;
+  try { st = await idb('readonly', s => s.get('state')); } catch {}
+  if (st && st.items && st.items.length){ ({ items, cur, past, sample } = st); items = items.map(migrate); }
+  else { items = SAMPLES.map(mk); sample = true; cur = 0; past = []; }
   if (!sample) $('hint').hidden = true;
   render();
+  // a remark being written when the tab was closed comes back as it was
+  if (st && st.draft && st.draft.idx === cur && items[cur]) openReview(items[cur], st.draft.marks);
 })();
 </script>
 </body>

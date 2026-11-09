@@ -3,7 +3,7 @@
 **Vos plans de fabrication, validés d'un swipe.**
 À droite, c'est bon. À gauche, on annote et on renvoie. Rien à installer, rien qui sort du navigateur.
 
-> 👉 Glissez vos PDF, swipez, exportez. Une revue complète en quelques minutes, sur ordinateur comme sur iPhone.
+> 👉 Glissez vos PDF ou DXF, swipez, exportez. Une revue complète en quelques minutes, sur ordinateur comme sur iPhone.
 
 ---
 
@@ -24,7 +24,9 @@
 | | `Espace` | Agrandir le plan |
 | | `Retour arrière` | Annuler |
 
-Formats acceptés : **PDF** (une carte par page) et **images**.
+Formats acceptés : **PDF** (une carte par page), **DXF** et **images**. Trois plans d'exemple sont chargés au premier lancement pour essayer tout de suite.
+
+Un DXF est dessiné en noir sur blanc depuis l'espace objet : géométrie, blocs, textes, cotations (calques masqués ignorés).
 
 ### 2. Annotez avec précision
 - **Quatre outils** : repère, zone, flèche, main levée.
@@ -51,7 +53,7 @@ Sur iPhone, les fichiers s'ouvrent dans la feuille de partage (Mail, WhatsApp, F
 - `PROMPT.md` : la consigne prête à donner à n'importe quel agent.
 - `revue.json` : toutes les données structurées.
 - Les plans annotés, un zoom sur chaque remarque et les images jointes.
-- Chaque remarque porte un identifiant stable (`REF-R1`), sa gravité, sa catégorie, sa « correction attendue » et **sa position en mm sur la feuille**, lue dans le PDF.
+- Chaque remarque porte un identifiant stable (`REF-R1`), sa gravité, sa catégorie, sa « correction attendue » et **sa position** : en mm sur la feuille pour un PDF, dans le repère du dessin (avec ses unités) pour un DXF.
 
 ---
 
@@ -74,3 +76,4 @@ Puis ouvrir http://localhost:8000. C'est tout.
 - `vendor/pdfjs/` : pdf.js 3.11.174 (Mozilla, licence Apache 2.0) pour lire les PDF.
 - `vendor/jspdf/` : jsPDF 2.5.1 (licence MIT) pour produire le rapport PDF.
 - `vendor/jszip/` : JSZip 3.10.1 (licence MIT) pour l'export .zip.
+- `vendor/dxf/` : dxf 5.3.1 (licence MIT) pour lire les DXF.

@@ -171,9 +171,9 @@ textarea,input[type=text]{font:15px var(--body);color:var(--ink);background:var(
   <header class="top">
     <div><h1>Revue de plans</h1><p id="progress" class="mono"></p></div>
     <button id="add-plans" class="btn ghost" type="button">Ajouter des plans</button>
-    <input id="files" type="file" accept="image/*,application/pdf" multiple hidden>
+    <input id="files" type="file" accept="image/*,application/pdf,.dxf,image/vnd.dxf,application/dxf" multiple hidden>
   </header>
-  <p id="hint" class="hint">Trois plans d'exemple sont chargés. Ajoutez vos plans (PDF ou images) pour lancer votre propre revue. Glissez à droite pour valider, à gauche pour demander une reprise.</p>
+  <p id="hint" class="hint">Trois plans d'exemple sont chargés. Ajoutez vos plans (PDF, DXF ou images) pour lancer votre propre revue. Glissez à droite pour valider, à gauche pour demander une reprise.</p>
 
   <main style="display:flex;flex-direction:column;gap:14px">
     <div id="deck" class="deck"></div>
@@ -292,7 +292,7 @@ const anchor = m => m.type === 'arrow' ? [m.x1, m.y1] : m.type === 'draw' ? m.pt
 const pct = v => Math.round(v * 100) + ' %';
 // the point a remark is about: an arrow points at its head, the label sits at its tail
 const target = m => m.type === 'arrow' ? [m.x2, m.y2] : anchor(m);
-const defaultRef = it => it.name.replace(/\.pdf · p\.(\d+)$/i, '_p$1').replace(/\.(pdf|png|jpe?g|webp|gif|heic)$/i, '');
+const defaultRef = it => it.name.replace(/\.pdf · p\.(\d+)$/i, '_p$1').replace(/\.(pdf|dxf|png|jpe?g|webp|gif|heic)$/i, '');
 const refOf = it => it.ref || defaultRef(it);
 const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
 const markMeta = m => [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
@@ -305,6 +305,87 @@ const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, check
 let saveT; const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 400); };
 
 /* ---------- PDF support, loaded only when a PDF is added ---------- */
+/* ---------- DXF: parsed by the dxf library, drawn here (its own renderer drops texts and dimensions) ---------- */
+let dxfReady = null;
+const dxfLib = () => dxfReady ||= loadScript('vendor/dxf/dxf.js').then(() => window.dxf);
+const DXF_UNITS = { 1: 'in', 2: 'ft', 4: 'mm', 5: 'cm', 6: 'm' };
+// CAD text escapes: %%c Ø, %%d °, %%p ±, \U+00D8, and MTEXT inline formatting
+function dxfText(t, mtext){
+  t = String(t || '').replace(/%%[cC]/g, 'Ø').replace(/%%[dD]/g, '°').replace(/%%[pP]/g, '±').replace(/%%[uUoOkK]/g, '').replace(/%%%/g, '%')
+    .replace(/\\U\+([0-9A-Fa-f]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  if (!mtext) return t;
+  return t.replace(/\\P/g, '\n').replace(/\\~/g, ' ')
+    .replace(/\\S([^;^#/]*)[\^#/]([^;]*);/g, '$1/$2')
+    .replace(/\\[ACFHQTWfcp][^;]*;/g, '').replace(/\\[LlOoKkNn]/g, '')
+    .replace(/\\([{}\\])/g, '\u0000$1').replace(/[{}]/g, '').replace(/\u0000/g, '');
+}
+// apply block-insertion transforms to a point (same order as the library does for geometry)
+function dxfPoint(x, y, transforms){
+  let rot = 0, scale = 1;
+  for (const t of transforms || []){
+    if (t.scaleX) x *= t.scaleX;
+    if (t.scaleY) y *= t.scaleY;
+    if (t.rotation){ const a = t.rotation * Math.PI / 180; [x, y] = [x * Math.cos(a) - y * Math.sin(a), y * Math.cos(a) + x * Math.sin(a)]; rot += t.rotation; }
+    if (t.x) x += t.x;
+    if (t.y) y += t.y;
+    if (t.extrusionZ === -1) x = -x;
+    scale *= Math.abs(t.scaleX || 1);
+  }
+  return { x, y, rot, scale };
+}
+async function dxfPage(file){
+  const lib = await dxfLib(), bytes = new Uint8Array(await file.arrayBuffer());
+  let text;
+  try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+  catch { text = new TextDecoder('windows-1252').decode(bytes); } // DXF before AutoCAD 2007 are ANSI
+  const parsed = lib.parseString(text);
+  // model space only; a dimension is drawn by inserting its pre-computed block (*D…)
+  parsed.entities = parsed.entities.filter(e => !e.paperSpace)
+    .map(e => e.type === 'DIMENSION' && e.block ? { ...e, type: 'INSERT', x: 0, y: 0 } : e);
+  const layers = parsed.tables.layers || {};
+  const hidden = name => { const l = layers[name]; return !!l && (l.colorNumber < 0 || (l.flags & 1) === 1); };
+  const lines = lib.toPolylines(parsed).polylines.filter(p => !(p.layer && hidden(p.layer.name)) && p.vertices.length > 1);
+  const texts = lib.denormalise(parsed).filter(e => (e.type === 'TEXT' || e.type === 'MTEXT') && !hidden(e.layer)).map(e => {
+    const mt = e.type === 'MTEXT', aligned = !mt && (e.hAlign || e.vAlign) && e.x2 !== undefined;
+    const p = dxfPoint(aligned ? e.x2 : e.x, aligned ? e.y2 : e.y, e.transforms);
+    const own = mt ? (e.rotation ?? (e.xAxisX !== undefined ? Math.atan2(e.xAxisY || 0, e.xAxisX) * 180 / Math.PI : 0)) : (e.rotation || 0);
+    let h = 'left', v = 'alphabetic';
+    if (mt){ const a = (e.attachmentPoint || 1) - 1; h = ['left', 'center', 'right'][a % 3]; v = ['top', 'middle', 'bottom'][Math.floor(a / 3)]; }
+    else if (aligned){ h = ({ 1: 'center', 2: 'right', 4: 'center' })[e.hAlign] || 'left'; v = ({ 1: 'bottom', 2: 'middle', 3: 'top' })[e.vAlign] || (e.hAlign === 4 ? 'middle' : 'alphabetic'); }
+    return { x: p.x, y: p.y, rot: own + p.rot, size: (mt ? e.nominalTextHeight : e.textHeight) * p.scale || 2.5, h, v, mt, str: dxfText(e.string, mt) };
+  }).filter(t => t.str.trim() && isFinite(t.x) && isFinite(t.y));
+  // extents of what is drawn, with a small margin
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const grow = (x, y) => { if (!isFinite(x) || !isFinite(y)) return; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+  lines.forEach(l => l.vertices.forEach(v => grow(v[0], v[1])));
+  texts.forEach(t => grow(t.x, t.y));
+  if (!isFinite(x0)) throw new Error('aucun élément dessinable dans le DXF');
+  const m = Math.max(x1 - x0, y1 - y0, 1) * .03;
+  x0 -= m; y0 -= m; x1 += m; y1 += m;
+  const k = 2400 / Math.max(x1 - x0, y1 - y0);
+  const cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round((x1 - x0) * k)); cv.height = Math.max(1, Math.round((y1 - y0) * k));
+  const ctx = cv.getContext('2d'), X = x => (x - x0) * k, Y = y => (y1 - y) * k;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  // black on white: CAD colours such as yellow or white would be unreadable on paper
+  ctx.strokeStyle = '#111'; ctx.fillStyle = '#111'; ctx.lineWidth = 1.6; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  lines.forEach(l => l.vertices.forEach((v, i) => i ? ctx.lineTo(X(v[0]), Y(v[1])) : ctx.moveTo(X(v[0]), Y(v[1]))));
+  ctx.stroke();
+  texts.forEach(t => {
+    const px = t.size * k, rows = t.str.split('\n'), lh = px * 1.66;
+    ctx.save(); ctx.translate(X(t.x), Y(t.y)); ctx.rotate(-t.rot * Math.PI / 180);
+    ctx.font = `${px}px Arial, Helvetica, sans-serif`; ctx.textAlign = t.h;
+    // MTEXT stacks lines from its attachment point; TEXT is a single line
+    const first = !t.mt ? 0 : t.v === 'top' ? 0 : t.v === 'middle' ? -(rows.length - 1) * lh / 2 : -(rows.length - 1) * lh;
+    ctx.textBaseline = t.v;
+    rows.forEach((r, i) => ctx.fillText(r, 0, first + i * lh));
+    ctx.restore();
+  });
+  const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+  return { name: file.name, blob, source: file.name, page: null,
+    dxf: { unites: DXF_UNITS[parsed.header.insUnits] || null, emprise: { x_min: +x0.toFixed(3), y_min: +y0.toFixed(3), x_max: +x1.toFixed(3), y_max: +y1.toFixed(3) } } };
+}
+
 let pdfReady = null;
 const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('chargement de ' + src + ' impossible')); document.head.appendChild(s); });
 function pdfjs(){
@@ -335,8 +416,9 @@ async function readFiles(files, msg){
   for (const f of files){
     try {
       if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) (await pdfPages(f)).forEach(p => added.push(mk(p)));
+      else if (/\.dxf$/i.test(f.name)) added.push(mk(await dxfPage(f)));
       else if (f.type.startsWith('image/')) added.push(mk({ name: f.name, blob: f }));
-      else errors.push(`${f.name} : format non pris en charge (PDF ou image uniquement)`);
+      else errors.push(`${f.name} : format non pris en charge (PDF, DXF ou image uniquement)`);
     } catch (err){ errors.push(`${f.name} : ${err.message || 'lecture impossible'}`); }
   }
   if (errors.length){ hint.className = 'hint err'; hint.textContent = 'Non chargés : ' + errors.join(' ; '); }
@@ -813,6 +895,11 @@ async function buildZip(){
     const full = await annotated(srcOf(it), it.marks, 2200), W = full.width, H = full.height;
     const planPath = `plans/${ref}.png`; zip.file(planPath, await toBlob(full));
     const frac = o => o && Object.fromEntries(Object.entries(o).map(([k, v]) => [k, r4(v)]));
+    // fraction of the image -> coordinates in the DXF drawing (Y up), so the agent can find the entities
+    const E = it.dxf && it.dxf.emprise, r2 = v => +v.toFixed(2);
+    const inDxf = o => o && E && ('w' in o
+      ? { x_min: r2(E.x_min + o.x * (E.x_max - E.x_min)), x_max: r2(E.x_min + (o.x + o.w) * (E.x_max - E.x_min)), y_min: r2(E.y_max - (o.y + o.h) * (E.y_max - E.y_min)), y_max: r2(E.y_max - o.y * (E.y_max - E.y_min)) }
+      : { x: r2(E.x_min + o.x * (E.x_max - E.x_min)), y: r2(E.y_max - o.y * (E.y_max - E.y_min)) });
     const inMm = o => o && mm && { x: r1(o.x * mm.w), y: r1(o.y * mm.h), ...('w' in o ? { w: r1(o.w * mm.w), h: r1(o.h * mm.h) } : {}) };
     const remarques = []; let n = 0;
     for (const m of it.marks){
@@ -831,22 +918,24 @@ async function buildZip(){
       });
       remarques.push({ id, gravite: m.sev === 'b' ? 'bloquant' : 'mineur', categorie: m.cat || null, outil: TOOL_KEY[m.type],
         commentaire: m.text || null, correction_attendue: (m.expected || '').trim() || null,
-        zone: frac(z), point: frac(point), zone_mm: inMm(z), point_mm: inMm(point), image_zone, pieces_jointes });
+        zone: frac(z), point: frac(point), zone_mm: inMm(z), point_mm: inMm(point), zone_dxf: inDxf(z), point_dxf: inDxf(point), image_zone, pieces_jointes });
     }
     const ch = it.checks || {};
     plans.push({ ref, fichier: it.source || it.name.replace(/ · p\.\d+$/, ''), page: it.page || +((it.name.match(/ · p\.(\d+)$/) || [])[1] || 0) || null,
-      decision: it.decision === 'ok' ? 'valide' : 'a_reprendre', format_feuille_mm: mm, image_annotee: planPath,
+      decision: it.decision === 'ok' ? 'valide' : 'a_reprendre', format_feuille_mm: mm, dxf: it.dxf || null, image_annotee: planPath,
       controles: { verifies: CHECKS.filter(c => ch[c]), non_verifies: CHECKS.filter(c => !ch[c]) }, remarques });
   }
   const data = { format: 'revue-plans/1', date: new Date().toISOString(),
-    coordonnees: 'Origine au coin haut gauche de la page. zone/point : fraction de la largeur et de la hauteur de la page (0 à 1). zone_mm/point_mm : millimètres sur la feuille (null si le plan ne vient pas d’un PDF). Pour une flèche, le point est la pointe.',
+    coordonnees: 'Origine au coin haut gauche de la page. zone/point : fraction de la largeur et de la hauteur de la page (0 à 1). zone_mm/point_mm : millimètres sur la feuille (null si le plan ne vient pas d’un PDF). zone_dxf/point_dxf : coordonnées dans le repère du dessin DXF, Y vers le haut, unités de plan.dxf.unites (null si le plan ne vient pas d’un DXF). Pour une flèche, le point est la pointe.',
     plans };
   zip.file('revue.json', JSON.stringify(data, null, 2) + '\n');
   zip.file('PROMPT.md', promptMd(data));
   return zip.generateAsync({ type: 'blob', mimeType: 'application/zip' });
 }
-function whereText(r){
-  const z = r.zone_mm, f = r.zone, w = TOOL_WORD[r.outil];
+function whereText(r, units){
+  const z = r.zone_mm, f = r.zone, w = TOOL_WORD[r.outil], u = units ? `, en ${units}` : '';
+  if (r.point_dxf) return `${w} visant le point X ${r.point_dxf.x}, Y ${r.point_dxf.y} (repère du DXF${u})`;
+  if (r.zone_dxf){ const d = r.zone_dxf; return `${w} couvrant X ${d.x_min} à ${d.x_max}, Y ${d.y_min} à ${d.y_max} (repère du DXF${u})`; }
   if (r.point){ const p = r.point_mm; return `${w} visant le point ${p ? `x ${p.x} mm, y ${p.y} mm` : `x ${pct(r.point.x)}, y ${pct(r.point.y)} de la page`}`; }
   return z ? `${w} couvrant x ${z.x} à ${r1(z.x + z.w)} mm, y ${z.y} à ${r1(z.y + z.h)} mm`
            : `${w} couvrant x ${pct(f.x)} à ${pct(f.x + f.w)}, y ${pct(f.y)} à ${pct(f.y + f.h)} de la page`;
@@ -865,6 +954,7 @@ function promptMd(d){
     '5. Les contrôles « non vérifiés » n’ont pas été faits par le relecteur : vérifie-les aussi.', '',
     '## Localiser une remarque', '',
     '- Les positions partent du **coin haut gauche** de la page, en millimètres sur la feuille quand c’est connu, sinon en % de la largeur et de la hauteur de la page.',
+    '- Pour un plan **DXF**, les positions sont données dans le repère du dessin (mêmes coordonnées que dans le fichier, Y vers le haut) : retrouve les entités concernées à ces coordonnées.',
     '- Pour une flèche, le point indiqué est l’endroit **visé** (la pointe).',
     '- Si tu as accès aux fichiers joints : `plans/<ref>.png` montre le plan annoté avec ses repères numérotés, `zones/<id>.png` un zoom sur l’endroit de chaque remarque, `images/` les photos et captures du relecteur. Sans les images, les positions suffisent.',
     '- Les mêmes données, structurées, sont dans `revue.json`.', '',
@@ -882,7 +972,7 @@ function promptMd(d){
     L.push('');
     p.remarques.forEach(r => {
       L.push(`#### ${r.id} · ${r.gravite}${r.categorie ? ' · ' + r.categorie : ''}`, '');
-      L.push(`- Où : ${r.outil === 'general' ? 'remarque générale, sur tout le plan' : whereText(r)}`);
+      L.push(`- Où : ${r.outil === 'general' ? 'remarque générale, sur tout le plan' : whereText(r, p.dxf && p.dxf.unites)}`);
       L.push(`- Constat : ${r.commentaire || '(pas de commentaire : voir l’image de la zone)'}`);
       if (r.correction_attendue) L.push(`- Correction attendue : ${r.correction_attendue}`);
       const files = [r.image_zone, ...r.pieces_jointes].filter(Boolean);

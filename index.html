@@ -154,21 +154,11 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 .check[aria-pressed="true"]::before{content:"✓ "}
 .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:8px}
 .link.accent{color:var(--accent);margin-top:8px}
-.prev-row{display:flex;gap:8px;align-items:flex-start}
-.prev-row > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.prev-row p{margin:0;overflow-wrap:anywhere}
-.fix{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;align-self:flex-start}
-.fix button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 9px;cursor:pointer}
-.fix button.ok[aria-pressed="true"]{background:var(--ok);color:#fff}
-.fix button.ko[aria-pressed="true"]{background:var(--ko);color:#fff}
-#prev-list{margin-bottom:10px}
-.rev-tag{font:600 12px var(--body);color:var(--accent);white-space:nowrap}
 .board-scroll{overflow:auto;max-height:min(66vh,680px);border:1px solid var(--line);background:var(--paper)}
 .board-scroll .pinboard{border:0}
 .zoombar{display:inline-flex;align-items:center;gap:4px;margin-left:auto}
 .zoombar .mono{min-width:48px;text-align:center}
 .tool:disabled{opacity:.4;cursor:not-allowed}
-.item-actions{display:flex;flex-wrap:wrap;gap:8px}
 @media (prefers-reduced-motion:reduce){.card,.round{transition:none!important}.round:hover:not(:disabled){transform:none}}
 </style>
 </head>
@@ -201,17 +191,11 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
         </div>
         <button id="checks-modify" class="link accent" type="button">Modifier la liste</button>
       </details>
-      <details id="prev-box" open hidden>
-        <summary><span>Indice précédent</span><span id="prev-count" class="mono"></span></summary>
-        <p id="prev-name" class="hint" style="margin-bottom:10px"></p>
-        <ol id="prev-list" class="marks"></ol>
-        <button id="prev-view" class="btn ghost" type="button">Voir l'indice précédent annoté</button>
-      </details>
     </section>
   </main>
 
   <section id="recap" hidden>
-    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="pdf" class="btn">Exporter en PDF</button></div></div>
+    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="md" class="btn ghost">Exporter en .md</button><button id="pdf" class="btn">Exporter en PDF</button></div></div>
     <div id="recap-grid" class="grid"></div>
     <label for="recap-text" class="hint">Texte à transmettre au bureau d'études :</label>
     <textarea id="recap-text" readonly rows="10"></textarea>
@@ -356,16 +340,6 @@ $('files').addEventListener('change', async e => {
   items.push(...await readFiles(files, 'Chargement des plans…'));
   render();
 });
-async function loadRevision(old, file){
-  const added = await readFiles([file], 'Chargement de l’indice suivant…');
-  if (!added.length) return;
-  // shortcut: every page of a multi-page PDF is compared with the same previous sheet; fine for one-sheet drawings
-  added.forEach(a => a.prev = { name: old.name, src: old.src, blob: old.blob, marks: old.marks, fixed: {} });
-  old.next = added[0].name;
-  items.push(...added); cur = items.length - added.length; // the recap is only shown once every plan is reviewed
-  render(); window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 /* ---------- drawing marks over a plan ---------- */
 function svgMarks(marks, W, H, labels = false){
   const s = Math.max(W, H) / 300, X = v => (v * W).toFixed(1), Y = v => (v * H).toFixed(1);
@@ -388,7 +362,7 @@ function svgMarks(marks, W, H, labels = false){
   }).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" class="ink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${out}${lab}</svg>`;
 }
-// the plan with its marks burnt in, for the PDF and for viewing a previous revision
+// the plan with its marks burnt in, for the PDF
 async function annotated(src, marks, maxSide = 2000){
   const img = await loadImg(src);
   const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
@@ -438,7 +412,7 @@ function render(){
     deck.appendChild(cardEl(cur, true));
   }
   renderControls(done ? null : items[cur]);
-  pdfFile = null; $('pdf').textContent = 'Exporter en PDF';
+  pdfFile = null; $('pdf').textContent = 'Exporter en PDF'; $('md').textContent = 'Exporter en .md';
   renderRecap(done && n > 0);
   save();
 }
@@ -448,7 +422,6 @@ function cardEl(i, top){
   c.innerHTML = `<div class="paper"><img draggable="false"></div><footer class="cartouche"><span class="mono idx">${i + 1}/${items.length}</span><span class="name"></span></footer><span class="stamp stamp-ok">Validé</span><span class="stamp stamp-ko">À reprendre</span>`;
   const img = c.querySelector('img'); img.src = srcOf(it); img.alt = 'Plan ' + it.name;
   c.querySelector('.name').textContent = it.name;
-  if (it.prev) c.querySelector('.cartouche').insertAdjacentHTML('beforeend', '<span class="rev-tag">Révision</span>');
   if (top) bindSwipe(c);
   return c;
 }
@@ -605,7 +578,7 @@ document.addEventListener('paste', e => {
 $('send-ko').addEventListener('click', () => closeReview(true));
 $('cancel-ko').addEventListener('click', () => closeReview(false));
 
-/* ---------- checklist and previous revision, under the card ---------- */
+/* ---------- checklist, under the card ---------- */
 function renderControls(it){
   $('controls').hidden = !it; if (!it) return;
   const ch = it.checks || (it.checks = {});
@@ -617,27 +590,7 @@ function renderControls(it){
     box.appendChild(b);
   });
   count();
-  const p = it.prev; $('prev-box').hidden = !p; if (!p) return;
-  $('prev-name').textContent = `Remarques faites sur ${p.name}. Indiquez pour chacune si elle est corrigée.`;
-  const fixedCount = () => $('prev-count').textContent = `${p.marks.filter((m, i) => p.fixed[i] === 'ok').length} / ${p.marks.length} corrigées`;
-  const list = $('prev-list'); list.innerHTML = ''; let n = 0;
-  p.marks.forEach((m, i) => {
-    const li = document.createElement('li'); li.className = 'prev-row';
-    li.innerHTML = `<span class="badge" style="background:${COLOR[m.sev]}">${m.type === 'note' ? 'G' : ++n}</span><div><span class="meta"></span><p></p><span class="fix" role="group" aria-label="Correction"><button type="button" class="ok">Corrigé</button><button type="button" class="ko">Pas corrigé</button></span></div>`;
-    li.querySelector('.meta').textContent = markMeta(m);
-    li.querySelector('p').textContent = m.text || '(sans commentaire)';
-    const btns = li.querySelectorAll('.fix button');
-    const sync = () => btns.forEach(b => b.setAttribute('aria-pressed', p.fixed[i] === b.className));
-    btns.forEach(b => b.addEventListener('click', () => { if (p.fixed[i] === b.className) delete p.fixed[i]; else p.fixed[i] = b.className; sync(); fixedCount(); save(); }));
-    sync(); list.appendChild(li);
-  });
-  fixedCount();
 }
-$('prev-view').addEventListener('click', async () => {
-  const p = items[cur] && items[cur].prev; if (!p) return;
-  const cv = await annotated(srcOf(p), p.marks);
-  cv.toBlob(b => openViewer(urlOf(b), `Indice précédent : ${p.name}`));
-});
 $('checks-modify').addEventListener('click', () => { $('checks-text').value = CHECKS.join('\n'); $('checks-edit').hidden = false; $('checks-modify').hidden = true; $('checks-text').focus(); });
 const closeChecksEdit = () => { $('checks-edit').hidden = true; $('checks-modify').hidden = false; };
 $('checks-cancel').addEventListener('click', closeChecksEdit);
@@ -663,14 +616,6 @@ function markLine(m, n){
 function extraLines(i){
   const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
   const out = [`  Contrôles : ${CHECKS.length - miss.length}/${CHECKS.length}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : '')];
-  if (i.prev){
-    const p = i.prev; let n = 0;
-    out.push(`  Indice précédent (${p.name}) : ${p.marks.filter((m, k) => p.fixed[k] === 'ok').length}/${p.marks.length} remarques corrigées`);
-    p.marks.forEach((m, k) => {
-      const num = m.type === 'note' ? 0 : ++n;
-      if (p.fixed[k] !== 'ok') out.push(`    ${p.fixed[k] === 'ko' ? 'Pas corrigé' : 'Non vérifié'} : ${markLine(m, num).trim().slice(2)}`);
-    });
-  }
   return out;
 }
 function recapText(list, date){
@@ -708,14 +653,6 @@ function renderRecap(show){
     if (!ul.children.length) ul.remove();
     const body = f.querySelector('.item-body');
     extraLines(it).forEach(l => { const e = document.createElement('span'); e.className = 'meta'; e.textContent = l.trim(); body.appendChild(e); });
-    if (it.decision === 'ko'){
-      const a = document.createElement('div'); a.className = 'item-actions';
-      a.innerHTML = `<button type="button" class="tool small">${it.next ? 'Indice suivant chargé, en charger un autre' : 'Charger l’indice suivant'}</button><input type="file" accept="image/*,application/pdf" hidden>`;
-      const input = a.querySelector('input');
-      a.querySelector('button').addEventListener('click', () => input.click());
-      input.addEventListener('change', () => { const file = input.files[0]; input.value = ''; if (file) loadRevision(it, file); });
-      body.appendChild(a);
-    }
     grid.appendChild(f);
   });
   $('recap-text').value = recapText(items, new Date().toLocaleDateString('fr-FR'));
@@ -779,24 +716,60 @@ async function buildPdf(){
   }
   return doc.output('blob');
 }
+// share sheet where the browser has one (iPhone), download otherwise
+async function deliver(file, btn, label){
+  if (navigator.canShare && navigator.canShare({ files: [file] })){
+    try { await navigator.share({ files: [file], title: 'Revue de plans' }); btn.textContent = label; }
+    // Safari refuses to share once preparing the file took too long after the tap: the next tap shares the ready file
+    catch (e){ btn.textContent = e.name === 'AbortError' ? label : 'Partager (fichier prêt)'; }
+  } else {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    btn.textContent = 'Fichier téléchargé'; setTimeout(() => btn.textContent = label, 2500);
+  }
+}
+const fileStem = () => `revue-plans-${new Date().toISOString().slice(0, 10)}`;
 $('pdf').addEventListener('click', async () => {
   const btn = $('pdf');
   try {
     if (!pdfFile){
       btn.disabled = true; btn.textContent = 'Préparation du PDF…';
-      pdfFile = new File([await buildPdf()], `revue-plans-${new Date().toISOString().slice(0, 10)}.pdf`, { type: 'application/pdf' });
+      pdfFile = new File([await buildPdf()], fileStem() + '.pdf', { type: 'application/pdf' });
     }
-    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })){
-      try { await navigator.share({ files: [pdfFile], title: 'Revue de plans' }); btn.textContent = 'Exporter en PDF'; }
-      // Safari refuses to share once building the PDF took too long after the tap: the next tap shares the ready file
-      catch (e){ btn.textContent = e.name === 'AbortError' ? 'Exporter en PDF' : 'Partager le PDF (prêt)'; }
-    } else {
-      const a = document.createElement('a'); a.href = URL.createObjectURL(pdfFile); a.download = pdfFile.name;
-      document.body.appendChild(a); a.click(); a.remove();
-      btn.textContent = 'PDF téléchargé'; setTimeout(() => btn.textContent = 'Exporter en PDF', 2500);
-    }
+    await deliver(pdfFile, btn, 'Exporter en PDF');
   } catch (e){ console.error(e); pdfFile = null; btn.textContent = 'Échec de l’export, réessayer'; }
   finally { btn.disabled = false; }
+});
+
+const cell = t => String(t).replace(/\|/g, '\\|').replace(/\s*\n\s*/g, '<br>');
+function recapMarkdown(list, date){
+  const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
+  const checksLine = i => { const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
+    return `Contrôles : ${CHECKS.length - miss.length}/${CHECKS.length}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : ''); };
+  const md = [`# Revue de plans du ${date}`, '', `${plural(list.length, 'plan')} · ${plural(ok.length, 'validé')} · ${ko.length} à reprendre`, ''];
+  md.push(`## À reprendre (${ko.length})`, '');
+  if (!ko.length) md.push('Aucun.', '');
+  ko.forEach(i => {
+    const nb = i.marks.filter(m => m.sev === 'b').length;
+    md.push(`### ${i.name}`, '', `**${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}** · ${checksLine(i)}`, '');
+    md.push('| # | Type | Gravité | Catégorie | Position | Commentaire | Images |', '|---|---|---|---|---|---|---|');
+    let n = 0;
+    i.marks.forEach(m => {
+      const general = m.type === 'note', [x, y] = general ? [] : anchor(m);
+      md.push(`| ${general ? 'G' : ++n} | ${general ? 'Général' : TOOLS[m.type]} | ${SEV[m.sev]} | ${cell(m.cat || '–')} | ${general ? '–' : `x ${pct(x)}, y ${pct(y)}`} | ${cell(m.text || '(sans commentaire)')} | ${m.imgs.length || '–'} |`);
+    });
+    md.push('');
+  });
+  md.push(`## Validés (${ok.length})`, '');
+  ok.forEach(i => md.push(`- **${i.name}** · ${checksLine(i)}`));
+  if (!ok.length) md.push('Aucun.');
+  md.push('', '_Positions en % de la largeur et de la hauteur du plan, depuis le coin haut gauche. Les images jointes sont dans l’export PDF._', '');
+  return md.join('\n');
+}
+$('md').addEventListener('click', async () => {
+  const btn = $('md');
+  const file = new File([recapMarkdown(items, new Date().toLocaleDateString('fr-FR'))], fileStem() + '.md', { type: 'text/markdown' });
+  try { await deliver(file, btn, 'Exporter en .md'); } catch (e){ console.error(e); btn.textContent = 'Échec de l’export, réessayer'; }
 });
 $('reset').addEventListener('click', () => { items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render(); });
 

@@ -719,14 +719,19 @@ async function buildPdf(){
 // share sheet where the browser has one (iPhone), download otherwise
 async function deliver(file, btn, label){
   if (navigator.canShare && navigator.canShare({ files: [file] })){
-    try { await navigator.share({ files: [file], title: 'Revue de plans' }); btn.textContent = label; }
-    // Safari refuses to share once preparing the file took too long after the tap: the next tap shares the ready file
-    catch (e){ btn.textContent = e.name === 'AbortError' ? label : 'Partager (fichier prêt)'; }
-  } else {
-    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
-    document.body.appendChild(a); a.click(); a.remove();
-    btn.textContent = 'Fichier téléchargé'; setTimeout(() => btn.textContent = label, 2500);
+    try { await navigator.share({ files: [file], title: 'Revue de plans' }); btn.textContent = label; return; }
+    catch (e){
+      if (e.name === 'AbortError'){ btn.textContent = label; return; } // the user closed the share sheet
+      // Safari refuses to share once preparing the file took too long after the tap: the next tap shares the ready file
+      if (e.name === 'NotAllowedError' && !btn.dataset.retried){ btn.dataset.retried = '1'; btn.textContent = 'Toucher pour partager (fichier prêt)'; return; }
+      console.warn('partage impossible, téléchargement à la place', e);
+    }
   }
+  delete btn.dataset.retried;
+  const url = URL.createObjectURL(file), a = document.createElement('a');
+  a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  btn.textContent = 'Fichier téléchargé'; setTimeout(() => btn.textContent = label, 2500);
 }
 const fileStem = () => `revue-plans-${new Date().toISOString().slice(0, 10)}`;
 $('pdf').addEventListener('click', async () => {
@@ -737,7 +742,7 @@ $('pdf').addEventListener('click', async () => {
       pdfFile = new File([await buildPdf()], fileStem() + '.pdf', { type: 'application/pdf' });
     }
     await deliver(pdfFile, btn, 'Exporter en PDF');
-  } catch (e){ console.error(e); pdfFile = null; btn.textContent = 'Échec de l’export, réessayer'; }
+  } catch (e){ console.error(e); pdfFile = null; btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
   finally { btn.disabled = false; }
 });
 
@@ -768,8 +773,8 @@ function recapMarkdown(list, date){
 }
 $('md').addEventListener('click', async () => {
   const btn = $('md');
-  const file = new File([recapMarkdown(items, new Date().toLocaleDateString('fr-FR'))], fileStem() + '.md', { type: 'text/markdown' });
-  try { await deliver(file, btn, 'Exporter en .md'); } catch (e){ console.error(e); btn.textContent = 'Échec de l’export, réessayer'; }
+  const file = new File([recapMarkdown(items, new Date().toLocaleDateString('fr-FR'))], fileStem() + '.md', { type: 'text/plain' }); // iOS shares text/plain, not text/markdown
+  try { await deliver(file, btn, 'Exporter en .md'); } catch (e){ console.error(e); btn.textContent = `Échec de l’export (${e.name || e.message}), réessayer`; }
 });
 $('reset').addEventListener('click', () => { items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render(); });
 

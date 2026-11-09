@@ -142,6 +142,33 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 .chip{align-self:flex-start;font:600 12px var(--body);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;border:1.5px solid currentColor}
 .chip.ok{color:var(--ok)} .chip.ko{color:var(--ko)}
 #recap-text{font:13px/1.5 var(--mono)}
+.controls{display:flex;flex-direction:column;gap:10px}
+.controls details{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.controls summary{cursor:pointer;display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:700 1.1rem var(--display);text-transform:uppercase;letter-spacing:.04em;list-style:none}
+.controls summary::-webkit-details-marker{display:none}
+.controls summary .mono{font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0}
+.controls details[open] summary{margin-bottom:10px}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.check{font:500 14px var(--body);border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:99px;padding:5px 12px;cursor:pointer}
+.check[aria-pressed="true"]{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.check[aria-pressed="true"]::before{content:"✓ "}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:8px}
+.link.accent{color:var(--accent);margin-top:8px}
+.prev-row{display:flex;gap:8px;align-items:flex-start}
+.prev-row > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.prev-row p{margin:0;overflow-wrap:anywhere}
+.fix{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;align-self:flex-start}
+.fix button{font:600 13px var(--body);border:0;background:transparent;color:var(--muted);padding:5px 9px;cursor:pointer}
+.fix button.ok[aria-pressed="true"]{background:var(--ok);color:#fff}
+.fix button.ko[aria-pressed="true"]{background:var(--ko);color:#fff}
+#prev-list{margin-bottom:10px}
+.rev-tag{font:600 12px var(--body);color:var(--accent);white-space:nowrap}
+.board-scroll{overflow:auto;max-height:min(66vh,680px);border:1px solid var(--line);background:var(--paper)}
+.board-scroll .pinboard{border:0}
+.zoombar{display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+.zoombar .mono{min-width:48px;text-align:center}
+.tool:disabled{opacity:.4;cursor:not-allowed}
+.item-actions{display:flex;flex-wrap:wrap;gap:8px}
 @media (prefers-reduced-motion:reduce){.card,.round{transition:none!important}.round:hover:not(:disabled){transform:none}}
 </style>
 </head>
@@ -163,10 +190,28 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
       <button id="yes" class="round ok" aria-label="Valider" title="Valider">✓</button>
     </div>
     <p class="keys mono">← à reprendre · → valider · espace agrandir</p>
+    <section id="controls" class="controls" hidden>
+      <details id="checks-box" open>
+        <summary><span>Contrôles</span><span id="checks-count" class="mono"></span></summary>
+        <div id="checks" class="checks"></div>
+        <div id="checks-edit" hidden>
+          <label for="checks-text" class="hint">Un contrôle par ligne. La liste sert pour tous les plans.</label>
+          <textarea id="checks-text" rows="8"></textarea>
+          <div class="row"><button id="checks-cancel" class="btn ghost" type="button">Annuler</button><button id="checks-save" class="btn" type="button">Enregistrer la liste</button></div>
+        </div>
+        <button id="checks-modify" class="link accent" type="button">Modifier la liste</button>
+      </details>
+      <details id="prev-box" open hidden>
+        <summary><span>Indice précédent</span><span id="prev-count" class="mono"></span></summary>
+        <p id="prev-name" class="hint" style="margin-bottom:10px"></p>
+        <ol id="prev-list" class="marks"></ol>
+        <button id="prev-view" class="btn ghost" type="button">Voir l'indice précédent annoté</button>
+      </details>
+    </section>
   </main>
 
   <section id="recap" hidden>
-    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn">Copier le récap</button></div></div>
+    <div class="recap-head"><h2>Récapitulatif</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><button id="reset" class="btn ghost">Nouvelle revue</button><button id="copy" class="btn ghost">Copier le récap</button><button id="pdf" class="btn">Exporter en PDF</button></div></div>
     <div id="recap-grid" class="grid"></div>
     <label for="recap-text" class="hint">Texte à transmettre au bureau d'études :</label>
     <textarea id="recap-text" readonly rows="10"></textarea>
@@ -183,9 +228,10 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
           <button type="button" class="tool" data-tool="rect"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Zone</button>
           <button type="button" class="tool" data-tool="arrow"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13L12 4M6.5 4H12v5.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Flèche</button>
           <button type="button" class="tool" data-tool="draw"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 11c2-6 4 1 6-3s4 1 6-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Main levée</button>
+          <span class="zoombar"><button type="button" class="tool small" id="zoom-out" aria-label="Dézoomer">−</button><span id="zoom-level" class="mono">100 %</span><button type="button" class="tool small" id="zoom-in" aria-label="Zoomer">+</button></span>
         </div>
         <p id="tool-hint" class="hint"></p>
-        <div class="pinboard" id="pinboard"><img id="pin-img" alt="" draggable="false"></div>
+        <div class="board-scroll" id="board-scroll"><div class="pinboard" id="pinboard"><img id="pin-img" alt="" draggable="false"></div></div>
       </div>
       <div class="board-col">
         <ol id="marks" class="marks"></ol>
@@ -206,7 +252,9 @@ textarea{font:15px var(--body);color:var(--ink);background:var(--bg);border:1px 
 
 <script>
 const $ = id => document.getElementById(id);
-let items = [], cur = 0, past = [], sample = true, draft = null, tool = 'pin', active = 0;
+let items = [], cur = 0, past = [], sample = true, draft = null, tool = 'pin', active = 0, zoom = 1, pdfFile = null;
+const DEFAULT_CHECKS = ['Cartouche complet', 'Indice et date', 'Échelle', 'Cotation complète', 'Tolérances', 'Matière', 'État de surface', 'Traitement / finition'];
+let CHECKS = [...DEFAULT_CHECKS];
 
 const CATS = ['Cote', 'Tolérance', 'Matière', 'État de surface', 'Usinage', 'Soudure', 'Cartouche', 'Autre'];
 const SEV = { b: 'Bloquant', m: 'Mineur' };
@@ -254,16 +302,18 @@ const migrate = it => it.marks ? it : { ...it, note: undefined, pins: undefined,
 const anchor = m => m.type === 'arrow' ? [m.x1, m.y1] : m.type === 'draw' ? m.pts[0] : [m.x, m.y];
 const pct = v => Math.round(v * 100) + ' %';
 const plural = (n, w) => `${n} ${w}${n > 1 ? 's' : ''}`;
+const markMeta = m => [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
+const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('image illisible')); i.src = src; });
 
 /* ---------- saved in this browser (IndexedDB: plans and photos can weigh several MB) ---------- */
 const dbp = new Promise((res, rej) => { const r = indexedDB.open('revue-plans', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function idb(mode, fn){ const d = await dbp; return new Promise((res, rej) => { const t = d.transaction('s', mode); const q = fn(t.objectStore('s')); t.oncomplete = () => res(q.result); t.onerror = () => rej(t.error); }); }
-const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, draft: draft && { idx: cur, marks: draft.marks } }, 'state')).catch(() => {});
+const save = () => idb('readwrite', s => s.put({ items, cur, past, sample, checks: CHECKS, draft: draft && { idx: cur, marks: draft.marks } }, 'state')).catch(() => {});
 let saveT; const saveSoon = () => { clearTimeout(saveT); saveT = setTimeout(save, 400); };
 
 /* ---------- PDF support, loaded only when a PDF is added ---------- */
 let pdfReady = null;
-const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('lecteur PDF indisponible')); document.head.appendChild(s); });
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('chargement de ' + src + ' impossible')); document.head.appendChild(s); });
 function pdfjs(){
   return pdfReady ||= loadScript('vendor/pdfjs/pdf.min.js').then(() => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js'; return pdfjsLib; });
 }
@@ -285,26 +335,39 @@ async function pdfPages(file){
 }
 
 $('add-plans').addEventListener('click', () => $('files').click());
-$('files').addEventListener('change', async e => {
-  const files = [...e.target.files]; e.target.value = '';
-  if (!files.length) return;
-  if (sample){ items = []; cur = 0; past = []; sample = false; }
-  const hint = $('hint'); hint.className = 'hint'; hint.hidden = false; hint.textContent = 'Chargement des plans…';
-  const errors = [];
+async function readFiles(files, msg){
+  const hint = $('hint'); hint.className = 'hint'; hint.hidden = false; hint.textContent = msg;
+  const added = [], errors = [];
   for (const f of files){
     try {
-      if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) (await pdfPages(f)).forEach(p => items.push(mk(p)));
-      else if (f.type.startsWith('image/')) items.push(mk({ name: f.name, blob: f }));
+      if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)) (await pdfPages(f)).forEach(p => added.push(mk(p)));
+      else if (f.type.startsWith('image/')) added.push(mk({ name: f.name, blob: f }));
       else errors.push(`${f.name} : format non pris en charge (PDF ou image uniquement)`);
     } catch (err){ errors.push(`${f.name} : ${err.message || 'lecture impossible'}`); }
   }
   if (errors.length){ hint.className = 'hint err'; hint.textContent = 'Non chargés : ' + errors.join(' ; '); }
   else hint.hidden = true;
+  return added;
+}
+$('files').addEventListener('change', async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  if (!files.length) return;
+  if (sample){ items = []; cur = 0; past = []; sample = false; }
+  items.push(...await readFiles(files, 'Chargement des plans…'));
   render();
 });
+async function loadRevision(old, file){
+  const added = await readFiles([file], 'Chargement de l’indice suivant…');
+  if (!added.length) return;
+  // shortcut: every page of a multi-page PDF is compared with the same previous sheet; fine for one-sheet drawings
+  added.forEach(a => a.prev = { name: old.name, src: old.src, blob: old.blob, marks: old.marks, fixed: {} });
+  old.next = added[0].name;
+  items.push(...added); cur = items.length - added.length; // the recap is only shown once every plan is reviewed
+  render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ---------- drawing marks over a plan ---------- */
-function svgMarks(marks, W, H){
+function svgMarks(marks, W, H, labels = false){
   const s = Math.max(W, H) / 300, X = v => (v * W).toFixed(1), Y = v => (v * H).toFixed(1);
   const out = marks.map(m => {
     const c = COLOR[m.sev];
@@ -317,7 +380,25 @@ function svgMarks(marks, W, H){
     }
     return '';
   }).join('');
-  return `<svg class="ink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${out}</svg>`;
+  let n = 0;
+  const lab = !labels ? '' : marks.map(m => {
+    if (m.type === 'note') return '';
+    const [x, y] = anchor(m), r = s * 4.5; n++;
+    return `<circle cx="${x * W}" cy="${y * H}" r="${r}" fill="${COLOR[m.sev]}" stroke="#fff" stroke-width="${s * .8}"/><text x="${x * W}" y="${y * H}" dy=".35em" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="${r * 1.1}" fill="#fff">${n}</text>`;
+  }).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="ink" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${out}${lab}</svg>`;
+}
+// the plan with its marks burnt in, for the PDF and for viewing a previous revision
+async function annotated(src, marks, maxSide = 2000){
+  const img = await loadImg(src);
+  const k = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+  const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * k) || 1188; cv.height = Math.round(img.naturalHeight * k) || 840;
+  const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+  if (marks.some(m => m.type !== 'note')){
+    const svg = svgMarks(marks, cv.width, cv.height, true).replace('<svg ', `<svg width="${cv.width}" height="${cv.height}" `);
+    ctx.drawImage(await loadImg('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)), 0, 0);
+  }
+  return cv;
 }
 function drawOverlay(board, marks, onLabel){
   const img = board.querySelector('img');
@@ -356,6 +437,8 @@ function render(){
     if (items[cur + 1]) deck.appendChild(cardEl(cur + 1, false));
     deck.appendChild(cardEl(cur, true));
   }
+  renderControls(done ? null : items[cur]);
+  pdfFile = null; $('pdf').textContent = 'Exporter en PDF';
   renderRecap(done && n > 0);
   save();
 }
@@ -365,6 +448,7 @@ function cardEl(i, top){
   c.innerHTML = `<div class="paper"><img draggable="false"></div><footer class="cartouche"><span class="mono idx">${i + 1}/${items.length}</span><span class="name"></span></footer><span class="stamp stamp-ok">Validé</span><span class="stamp stamp-ko">À reprendre</span>`;
   const img = c.querySelector('img'); img.src = srcOf(it); img.alt = 'Plan ' + it.name;
   c.querySelector('.name').textContent = it.name;
+  if (it.prev) c.querySelector('.cartouche').insertAdjacentHTML('beforeend', '<span class="rev-tag">Révision</span>');
   if (top) bindSwipe(c);
   return c;
 }
@@ -401,7 +485,7 @@ function openReview(it, savedMarks){
   $('sheet-name').textContent = it.name;
   $('pin-img').src = srcOf(it); $('pin-img').alt = 'Plan ' + it.name;
   setTool(tool); drawReview(); drawList();
-  $('sheet').hidden = false; save();
+  $('sheet').hidden = false; setZoom(1); save();
 }
 function closeReview(sent){
   $('sheet').hidden = true;
@@ -417,8 +501,19 @@ function setTool(t){
   tool = t;
   document.querySelectorAll('.tool[data-tool]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tool === t));
   $('pinboard').classList.toggle('drawing', t !== 'pin');
-  $('tool-hint').textContent = TOOL_HINT[t];
+  $('tool-hint').textContent = TOOL_HINT[t] + (zoom > 1 && t !== 'pin' ? ' Pour déplacer le plan zoomé, repassez sur Repère.' : '');
 }
+const ZOOMS = [1, 1.5, 2, 3, 4];
+function setZoom(z){
+  const sc = $('board-scroll');
+  const fx = (sc.scrollLeft + sc.clientWidth / 2) / sc.scrollWidth, fy = (sc.scrollTop + sc.clientHeight / 2) / sc.scrollHeight;
+  zoom = z; $('pinboard').style.width = z * 100 + '%'; $('zoom-level').textContent = Math.round(z * 100) + ' %';
+  $('zoom-out').disabled = z === ZOOMS[0]; $('zoom-in').disabled = z === ZOOMS[ZOOMS.length - 1];
+  sc.scrollLeft = fx * sc.scrollWidth - sc.clientWidth / 2; sc.scrollTop = fy * sc.scrollHeight - sc.clientHeight / 2; // keep the same spot centred
+  setTool(tool);
+}
+$('zoom-in').addEventListener('click', () => setZoom(ZOOMS[ZOOMS.indexOf(zoom) + 1] ?? zoom));
+$('zoom-out').addEventListener('click', () => setZoom(ZOOMS[ZOOMS.indexOf(zoom) - 1] ?? zoom));
 document.querySelectorAll('.tool[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
 const drawReview = preview => drawOverlay($('pinboard'), preview ? [...draft.marks, preview] : draft.marks, focusMark);
 function focusMark(i){ active = i; markActive(); const ta = $('m-' + i); if (ta){ ta.focus(); ta.scrollIntoView({ block: 'nearest' }); } }
@@ -510,6 +605,48 @@ document.addEventListener('paste', e => {
 $('send-ko').addEventListener('click', () => closeReview(true));
 $('cancel-ko').addEventListener('click', () => closeReview(false));
 
+/* ---------- checklist and previous revision, under the card ---------- */
+function renderControls(it){
+  $('controls').hidden = !it; if (!it) return;
+  const ch = it.checks || (it.checks = {});
+  const count = () => $('checks-count').textContent = `${CHECKS.filter(c => ch[c]).length} / ${CHECKS.length}`;
+  const box = $('checks'); box.innerHTML = '';
+  CHECKS.forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'check'; b.textContent = c; b.setAttribute('aria-pressed', !!ch[c]);
+    b.addEventListener('click', () => { if (ch[c]) delete ch[c]; else ch[c] = true; b.setAttribute('aria-pressed', !!ch[c]); count(); save(); });
+    box.appendChild(b);
+  });
+  count();
+  const p = it.prev; $('prev-box').hidden = !p; if (!p) return;
+  $('prev-name').textContent = `Remarques faites sur ${p.name}. Indiquez pour chacune si elle est corrigée.`;
+  const fixedCount = () => $('prev-count').textContent = `${p.marks.filter((m, i) => p.fixed[i] === 'ok').length} / ${p.marks.length} corrigées`;
+  const list = $('prev-list'); list.innerHTML = ''; let n = 0;
+  p.marks.forEach((m, i) => {
+    const li = document.createElement('li'); li.className = 'prev-row';
+    li.innerHTML = `<span class="badge" style="background:${COLOR[m.sev]}">${m.type === 'note' ? 'G' : ++n}</span><div><span class="meta"></span><p></p><span class="fix" role="group" aria-label="Correction"><button type="button" class="ok">Corrigé</button><button type="button" class="ko">Pas corrigé</button></span></div>`;
+    li.querySelector('.meta').textContent = markMeta(m);
+    li.querySelector('p').textContent = m.text || '(sans commentaire)';
+    const btns = li.querySelectorAll('.fix button');
+    const sync = () => btns.forEach(b => b.setAttribute('aria-pressed', p.fixed[i] === b.className));
+    btns.forEach(b => b.addEventListener('click', () => { if (p.fixed[i] === b.className) delete p.fixed[i]; else p.fixed[i] = b.className; sync(); fixedCount(); save(); }));
+    sync(); list.appendChild(li);
+  });
+  fixedCount();
+}
+$('prev-view').addEventListener('click', async () => {
+  const p = items[cur] && items[cur].prev; if (!p) return;
+  const cv = await annotated(srcOf(p), p.marks);
+  cv.toBlob(b => openViewer(urlOf(b), `Indice précédent : ${p.name}`));
+});
+$('checks-modify').addEventListener('click', () => { $('checks-text').value = CHECKS.join('\n'); $('checks-edit').hidden = false; $('checks-modify').hidden = true; $('checks-text').focus(); });
+const closeChecksEdit = () => { $('checks-edit').hidden = true; $('checks-modify').hidden = false; };
+$('checks-cancel').addEventListener('click', closeChecksEdit);
+$('checks-save').addEventListener('click', () => {
+  const list = [...new Set($('checks-text').value.split('\n').map(l => l.trim()).filter(Boolean))];
+  CHECKS = list.length ? list : [...DEFAULT_CHECKS];
+  closeChecksEdit(); render();
+});
+
 /* ---------- viewer ---------- */
 function openViewer(src, name){ $('viewer-img').src = src; $('viewer-img').alt = name; $('viewer-img').classList.remove('big'); $('viewer-name').textContent = name; $('viewer').hidden = false; $('viewer-close').focus(); }
 const viewPlan = () => items[cur] && openViewer(srcOf(items[cur]), items[cur].name);
@@ -523,14 +660,28 @@ function markLine(m, n){
   const imgs = m.imgs.length ? ` (${plural(m.imgs.length, 'image')} ${m.imgs.length > 1 ? 'jointes' : 'jointe'})` : '';
   return `  • ${where} [${tags}] : ${m.text || '(sans commentaire)'}${imgs}`;
 }
+function extraLines(i){
+  const ch = i.checks || {}, miss = CHECKS.filter(c => !ch[c]);
+  const out = [`  Contrôles : ${CHECKS.length - miss.length}/${CHECKS.length}` + (miss.length ? ` (non vérifiés : ${miss.join(', ')})` : '')];
+  if (i.prev){
+    const p = i.prev; let n = 0;
+    out.push(`  Indice précédent (${p.name}) : ${p.marks.filter((m, k) => p.fixed[k] === 'ok').length}/${p.marks.length} remarques corrigées`);
+    p.marks.forEach((m, k) => {
+      const num = m.type === 'note' ? 0 : ++n;
+      if (p.fixed[k] !== 'ok') out.push(`    ${p.fixed[k] === 'ko' ? 'Pas corrigé' : 'Non vérifié'} : ${markLine(m, num).trim().slice(2)}`);
+    });
+  }
+  return out;
+}
 function recapText(list, date){
   const ok = list.filter(i => i.decision === 'ok'), ko = list.filter(i => i.decision === 'ko');
-  const lines = [`Revue de plans du ${date}`, '', `Validés (${ok.length})`, ...ok.map(i => `- ${i.name}`), '', `À reprendre (${ko.length})`];
+  const lines = [`Revue de plans du ${date}`, '', `Validés (${ok.length})`, ...ok.flatMap(i => [`- ${i.name}`, ...extraLines(i)]), '', `À reprendre (${ko.length})`];
   ko.forEach(i => {
     const nb = i.marks.filter(m => m.sev === 'b').length;
     lines.push(`- ${i.name} : ${plural(nb, 'point')} ${nb > 1 ? 'bloquants' : 'bloquant'}, ${i.marks.length - nb} ${i.marks.length - nb > 1 ? 'mineurs' : 'mineur'}`);
     let n = 0;
     i.marks.forEach(m => lines.push(markLine(m, m.type === 'note' ? 0 : ++n)));
+    lines.push(...extraLines(i));
   });
   return lines.join('\n');
 }
@@ -549,12 +700,22 @@ function renderRecap(show){
       const num = m.type === 'note' ? 'G' : ++n;
       const li = document.createElement('li');
       li.innerHTML = `<span class="badge" style="background:${COLOR[m.sev]}">${num}</span><div><span class="meta"></span><p></p><div class="thumbs"></div></div>`;
-      li.querySelector('.meta').textContent = [m.type === 'note' ? 'Général' : TOOLS[m.type], SEV[m.sev], m.cat].filter(Boolean).join(' · ');
+      li.querySelector('.meta').textContent = markMeta(m);
       li.querySelector('p').textContent = m.text || '(sans commentaire)';
       m.imgs.forEach(b => li.querySelector('.thumbs').appendChild(thumb(b, null)));
       ul.appendChild(li);
     });
     if (!ul.children.length) ul.remove();
+    const body = f.querySelector('.item-body');
+    extraLines(it).forEach(l => { const e = document.createElement('span'); e.className = 'meta'; e.textContent = l.trim(); body.appendChild(e); });
+    if (it.decision === 'ko'){
+      const a = document.createElement('div'); a.className = 'item-actions';
+      a.innerHTML = `<button type="button" class="tool small">${it.next ? 'Indice suivant chargé, en charger un autre' : 'Charger l’indice suivant'}</button><input type="file" accept="image/*,application/pdf" hidden>`;
+      const input = a.querySelector('input');
+      a.querySelector('button').addEventListener('click', () => input.click());
+      input.addEventListener('change', () => { const file = input.files[0]; input.value = ''; if (file) loadRevision(it, file); });
+      body.appendChild(a);
+    }
     grid.appendChild(f);
   });
   $('recap-text').value = recapText(items, new Date().toLocaleDateString('fr-FR'));
@@ -563,6 +724,79 @@ $('copy').addEventListener('click', () => {
   const ta = $('recap-text'), btn = $('copy');
   const done = () => { btn.textContent = 'Copié'; setTimeout(() => btn.textContent = 'Copier le récap', 1500); };
   navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); btn.textContent = 'Sélectionné, faites Ctrl+C'; });
+});
+let jspdfReady = null;
+const jspdfLib = () => jspdfReady ||= loadScript('vendor/jspdf/jspdf.umd.min.js').then(() => window.jspdf);
+async function buildPdf(){
+  const { jsPDF } = await jspdfLib();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const PW = 297, PH = 210, M = 12, INK = [24, 33, 43], MUTED = [90, 104, 120], RED = [191, 61, 41], ORANGE = [176, 109, 5], GREEN = [27, 128, 73];
+  let y = M;
+  const write = (t, size = 10, { bold = false, color = INK, x = M, w = PW - 2 * M, mono = false } = {}) => {
+    doc.setFont(mono ? 'courier' : 'helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
+    const lh = size * .45;
+    for (const line of doc.splitTextToSize(t, w)){
+      if (y + lh > PH - M){ doc.addPage(); y = M; }
+      y += lh; doc.text(line, x, y);
+    }
+  };
+  // cover: the same summary as the text recap
+  const date = new Date().toLocaleDateString('fr-FR');
+  write('Revue de plans', 22, { bold: true }); y += 2;
+  const ok = items.filter(i => i.decision === 'ok').length;
+  write(`${date} · ${plural(items.length, 'plan')} · ${plural(ok, 'validé')} · ${items.length - ok} à reprendre`, 11, { color: MUTED }); y += 4;
+  recapText(items, date).split('\n').slice(2).forEach(l => l ? write(l, 9.5, { bold: !l.startsWith(' ') && !l.startsWith('-') }) : (y += 2));
+  for (const it of items){
+    doc.addPage(); y = M;
+    write(it.name, 14, { bold: true });
+    write(it.decision === 'ok' ? 'VALIDÉ' : 'À REPRENDRE', 10, { bold: true, color: it.decision === 'ok' ? GREEN : RED });
+    y += 3; const top = y, colW = 182;
+    const cv = await annotated(srcOf(it), it.marks);
+    const r = Math.min(colW / cv.width, (PH - M - top) / cv.height);
+    doc.addImage(cv.toDataURL('image/jpeg', .85), 'JPEG', M, top, cv.width * r, cv.height * r);
+    const x = M + colW + 6, w = PW - M - x; y = top - 4;
+    let n = 0;
+    it.marks.forEach(m => {
+      const num = m.type === 'note' ? 'G' : ++n;
+      write(`${num}. ${markMeta(m)}`, 8, { bold: true, color: m.sev === 'b' ? RED : ORANGE, x, w });
+      write(m.text || '(sans commentaire)', 9.5, { x, w });
+      if (m.imgs.length) write(`${plural(m.imgs.length, 'image')} en annexe`, 8, { color: MUTED, x, w });
+      y += 2;
+    });
+    extraLines(it).forEach(l => write(l.trim(), 8.5, { color: MUTED, x, w }));
+    // attached images, six per page
+    n = 0;
+    const photos = it.marks.flatMap(m => { const num = m.type === 'note' ? 'remarque générale' : 'remarque ' + (++n); return m.imgs.map(b => ({ b, label: `${it.name} · ${num}` })); });
+    for (let k = 0; k < photos.length; k++){
+      if (k % 6 === 0){ doc.addPage(); y = M; write(`${it.name} : images jointes`, 12, { bold: true }); }
+      const col = k % 3, rowI = Math.floor(k % 6 / 3), cw = (PW - 2 * M - 12) / 3, ch = (PH - M - 22) / 2 - 8;
+      const cx = M + col * (cw + 6), cy = 22 + rowI * (ch + 8);
+      const pc = await annotated(urlOf(photos[k].b), [], 1400), pr = Math.min(cw / pc.width, ch / pc.height);
+      doc.addImage(pc.toDataURL('image/jpeg', .85), 'JPEG', cx, cy, pc.width * pr, pc.height * pr);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+      doc.text(doc.splitTextToSize(photos[k].label, cw)[0], cx, cy + pc.height * pr + 4);
+    }
+  }
+  return doc.output('blob');
+}
+$('pdf').addEventListener('click', async () => {
+  const btn = $('pdf');
+  try {
+    if (!pdfFile){
+      btn.disabled = true; btn.textContent = 'Préparation du PDF…';
+      pdfFile = new File([await buildPdf()], `revue-plans-${new Date().toISOString().slice(0, 10)}.pdf`, { type: 'application/pdf' });
+    }
+    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })){
+      try { await navigator.share({ files: [pdfFile], title: 'Revue de plans' }); btn.textContent = 'Exporter en PDF'; }
+      // Safari refuses to share once building the PDF took too long after the tap: the next tap shares the ready file
+      catch (e){ btn.textContent = e.name === 'AbortError' ? 'Exporter en PDF' : 'Partager le PDF (prêt)'; }
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(pdfFile); a.download = pdfFile.name;
+      document.body.appendChild(a); a.click(); a.remove();
+      btn.textContent = 'PDF téléchargé'; setTimeout(() => btn.textContent = 'Exporter en PDF', 2500);
+    }
+  } catch (e){ console.error(e); pdfFile = null; btn.textContent = 'Échec de l’export, réessayer'; }
+  finally { btn.disabled = false; }
 });
 $('reset').addEventListener('click', () => { items = []; cur = 0; past = []; sample = false; $('hint').hidden = true; render(); });
 
@@ -583,6 +817,7 @@ document.addEventListener('keydown', e => {
 (async () => {
   let st = null;
   try { st = await idb('readonly', s => s.get('state')); } catch {}
+  if (st && st.checks && st.checks.length) CHECKS = st.checks;
   if (st && st.items && st.items.length){ ({ items, cur, past, sample } = st); items = items.map(migrate); }
   else { items = SAMPLES.map(mk); sample = true; cur = 0; past = []; }
   if (!sample) $('hint').hidden = true;

@@ -4,7 +4,10 @@ Valider ou renvoyer des plans de fabrication d'un geste, façon swipe.
 
 - Glisser à droite : plan validé.
 - Glisser à gauche : plan à reprendre. On annote le plan avec quatre outils (repère, zone, flèche, main levée). Chaque annotation a son commentaire, une catégorie (cote, tolérance, matière…), une gravité (bloquant ou mineur) et des images jointes (capture d'écran, photo de la pièce). Sur ordinateur, une capture copiée se colle directement (Ctrl+V / ⌘V).
-- À la fin : récapitulatif avec vignettes annotées et texte prêt à copier pour le bureau d'études.
+- Zoom dans l'éditeur (jusqu'à 400 %) pour annoter une petite cote.
+- Contrôles : une check-list à cocher sous chaque plan (cartouche, échelle, tolérances…), modifiable.
+- Indice suivant : depuis le récap, « Charger l'indice suivant » sur un plan refusé. Le nouveau plan arrive avec les anciennes remarques, à marquer « corrigé » ou « pas corrigé », et l'ancien plan annoté reste consultable.
+- À la fin : récapitulatif avec vignettes annotées, texte prêt à copier, et export PDF (une page par plan, images jointes en annexe). Sur iPhone, le PDF s'ouvre dans la feuille de partage (Mail, WhatsApp, Fichiers…).
 
 Formats acceptés : PDF (une carte par page) et images. Tout reste dans le navigateur : aucun plan n'est envoyé sur un serveur. La revue en cours est gardée (IndexedDB), y compris une remarque en cours d'écriture, jusqu'à « Nouvelle revue ».
 
@@ -27,3 +30,4 @@ puis ouvrir http://localhost:8000. Pas de build, pas de dépendance à installer
 
 - `index.html` : toute l'appli (HTML, CSS, JS).
 - `vendor/pdfjs/` : pdf.js 3.11.174 (Mozilla, licence Apache 2.0) pour lire les PDF.
+- `vendor/jspdf/` : jsPDF 2.5.1 (licence MIT) pour produire le rapport PDF.
